@@ -17,8 +17,9 @@ class SanchezAnsatz(BlueprintCircuit):
 
     def __init__(
             self, 
-            target_state: np.ndarray, 
-            eps: float, 
+            target_state: np.ndarray,
+            eps: float,
+            eta: float = 4*np.pi,
             name: Optional[str] = "SanchezAnsatz",
             global_phase: Optional[bool] = False
         ):
@@ -28,12 +29,16 @@ class SanchezAnsatz(BlueprintCircuit):
         target_state: The state we desire to approximate
         
         eps: (Epsilon) tolerated error used for defining the approximation
-                and at which level the tree will be truncated in the original 
-                article
+             and at which level the tree will be truncated in the original 
+             article
+
+        eta: Hyperparameter defining the supremum point of the second order
+             derivative of the log of the function fo be approximated.
+             Default value is 4*π
         """
         super().__init__(name=name)
         self.num_qubits = int(np.log2(len(target_state)))
-        self.eps = eps
+        self.k0 = self._compute_k0(eps, eta)
         self.params = target_state
         self.global_phase = global_phase
     
@@ -56,6 +61,28 @@ class SanchezAnsatz(BlueprintCircuit):
     def num_qubits(self, value: int) -> None: 
         self._num_qubits = value
         self.qregs = [QuantumRegister(value)]
+
+    def _compute_k0(self, eps: float, eta: float = 4*np.pi) -> int:
+        """
+        Computes the qubit from which the angles are to be clustered
+        according to equation 4 of MARIN-SANCHEZ et al. (2021) 
+        DOI: 10.1103/PhysRevA.107.022421
+
+        Parameters
+        ----------
+        eps: (Epsilon) tolerated error used for defining the approximation
+            and at which level the tree will be truncated in the original 
+            article
+
+        eta: Hyperparameter defining the supremum point of the second order
+             derivative of the log of the function fo be approximated. 
+             Default value is 4*π
+        """
+        
+        internal_log = 4**(-self.num_qubits) - 96/eta**2 * np.log(1 - eps)
+        arg_1 = np.ceil(-1/2 * np.log2(internal_log))
+
+        return int(np.max([arg_1, 2]))
 
     def _build(self) -> None:
         super()._build()
