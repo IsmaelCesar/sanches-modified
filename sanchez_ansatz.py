@@ -1,11 +1,15 @@
-from typing import Optional
+from typing import Optional, List
 import numpy  as np
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit import Qubit, Parameter
 from qiskit.circuit.library import BlueprintCircuit
-from qclib.state_preparation.util.state_tree_preparation import state_decomposition
+from qclib.state_preparation.util.state_tree_preparation import (
+    Amplitude,
+    state_decomposition
+)
 from qclib.state_preparation.util.angle_tree_preparation import create_angles_tree
 from qclib.state_preparation.util import tree_utils
+from qclib.state_preparation.util.angle_tree_preparation import NodeAngleTree
 
 class SanchezAnsatz(BlueprintCircuit):
     """
@@ -39,12 +43,13 @@ class SanchezAnsatz(BlueprintCircuit):
         super().__init__(name=name)
         self.num_qubits = int(np.log2(len(target_state)))
         self.k0 = self._compute_k0(eps, eta)
-        self.params = target_state
+        self.target_state = target_state
         self.global_phase = global_phase
+        self.init_params = []
     
     def _check_configuration(self, raise_on_failure: bool = True) -> bool: 
-        log2_params = np.log2(len(self.params))
-        log2_params_ceil = np.ceil(np.log2(len(self.params)))
+        log2_params = np.log2(len(self.target_state))
+        log2_params_ceil = np.ceil(np.log2(len(self.target_state)))
         valid = True
         if log2_params < log2_params_ceil:
             valid = False
@@ -86,7 +91,9 @@ class SanchezAnsatz(BlueprintCircuit):
 
     def _build(self) -> None:
         super()._build()
-        circuit = QuantumCircuit(self.num_qubits)
+        circuit = QuantumCircuit(*self.qregs)
+    
+        self._build_define(circuit)
 
         try: 
             operation = circuit.to_gate(label=self.name)
@@ -95,4 +102,79 @@ class SanchezAnsatz(BlueprintCircuit):
             operation = circuit.to_instruction(label=self.name)
 
         self.append(operation, [*self.qubits], [])
+
+    def _build_define(self, circuit: QuantumCircuit) -> QuantumCircuit:
+
+        amps = [Amplitude(amp_idx, amp_value) for amp_idx, amp_value in enumerate(self.target_state)]
+        state_tree = state_decomposition(self.num_qubits, amps)
+        angle_tree = create_angles_tree(state_tree)
+        #params = self._define_params(angle_tree)
+
+        angle_levels = list(range(0, self.num_qubits-1))
+
+        truncated_level = angle_levels[0:self.k0 - 1]
+
+        for level_idx in truncated_level:
+            level_nodes = []
+            tree_utils.subtree_level_nodes(angle_levels, level_idx, level_nodes)
+            parameters = self._define_parameters_for_node_list(level_idx, level_nodes)
+            self._multiplex_parameters(circuit, parameters, circuit.qubits)
+
+    def _multiplex_parameters(
+            self, 
+            circuit: QuantumCircuit, 
+            parameters: List[Parameter], 
+            qubits: List[Qubit], 
+            reverse: bool = False
+        ) -> None: 
+
+        mat = [[0.5, 0.5],[0.5, -0.5]]
+
+        if len(parameters) == 1:
+            return circuit.ry(parameters[0], qubits[0])
+        elif len(parameters) == 2:
+            mux_param = np.dot(parameters, mat)
+    
+            sub_circ = QuantumCircuit(2)
+            sub_circ.ry(mux_param[0], 1)
+            sub_circ.cx(0, 1)
+            sub_circ.ry(mux_param[0], 1)
+            sub_circ.cx(0, 1)
+            if reverse: 
+                sub_circ = sub_circ.reverse_ops()
+            circuit.compose(sub_circ, qubits)
+
+            return None
+
+        params_length = len(parameters)
+        eye_dim = int(np.log2(params_length))
+
+        block_matrix = np.kron(mat, np.eye(eye_dim-1))
+        mux_param = np.dot(parameters, block_matrix).tolist()
+
+        qubits = circuit.qubits
+
+        self._multiplex_parameters(circuit, mux_param[0:params_length//2])
+        circuit.cx(qubits[0], qubits[-1])
+        self._multiplex_parameters(circuit, mux_param[params_length//2:], reverse=True)
+        circuit.cx(qubits[0], qubits[-1])
+
+        return None
+
+
+
+
+
+    def _define_parameters_for_node_list(self, level_idx: int, total_angles: int) -> List[Parameter]:
+        """
+        Creates a parameter list for the list of the nodes in the current level being explored
+
+        Parameters
+        ----------
+        level_idx: The index of the current tree level
+
+        total_angles: The total number of angles in the current level
+        """
+        parameters =  [Parameter(name=f"p[{level_idx}, {param_idx}]") for param_idx in range(total_angles)]
+        return parameters
 
