@@ -80,10 +80,10 @@ class SanchezAnsatz(BlueprintCircuit):
             article
 
         eta: Hyperparameter defining the supremum point of the second order
-             derivative of the log of the function fo be approximated. 
+             derivative of the log of the function fo be approximated.
              Default value is 4*π
         """
-        
+
         internal_log = 4**(-self.num_qubits) - 96/eta**2 * np.log(1 - eps)
         arg_1 = np.ceil(-1/2 * np.log2(internal_log))
 
@@ -92,12 +92,12 @@ class SanchezAnsatz(BlueprintCircuit):
     def _build(self) -> None:
         super()._build()
         circuit = QuantumCircuit(*self.qregs)
-    
+
         self._build_define(circuit)
 
-        try: 
+        try:
             operation = circuit.to_gate(label=self.name)
-        
+
         except:
             operation = circuit.to_instruction(label=self.name)
 
@@ -108,25 +108,42 @@ class SanchezAnsatz(BlueprintCircuit):
         amps = [Amplitude(amp_idx, amp_value) for amp_idx, amp_value in enumerate(self.target_state)]
         state_tree = state_decomposition(self.num_qubits, amps)
         angle_tree = create_angles_tree(state_tree)
-        #params = self._define_params(angle_tree)
 
-        angle_levels = list(range(0, self.num_qubits-1))
+        angle_levels = list(range(0, self.num_qubits))
 
-        truncated_level = angle_levels[0:self.k0 - 1]
+        top_levels = angle_levels[0:self.k0 - 1]
 
-        for level_idx in truncated_level:
+        for level_idx in top_levels:
             level_nodes = []
-            tree_utils.subtree_level_nodes(angle_levels, level_idx, level_nodes)
-            parameters = self._define_parameters_for_node_list(level_idx, level_nodes)
-            self._multiplex_parameters(circuit, parameters, circuit.qubits)
+            tree_utils.subtree_level_nodes(angle_tree, level_idx, level_nodes)
+            parameters = self._define_parameters_for_node_list(level_idx, len(level_nodes))
+            self._multiplex_parameters(circuit, parameters, circuit.qubits[:level_idx+1])
+            
+            # saving initial parameters
+            self.init_params += [node.angle_y for node in level_nodes]
+        
+        cluster_levels = angle_levels[self.k0-1:]
+        self._clusterize_angles(cluster_levels, angle_tree, circuit)
+        
+    def _clusterize_angles(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit):
+
+        for c_lvl in cluster_levels:
+            level_nodes = []
+            tree_utils.subtree_level_nodes(angle_tree, c_lvl, level_nodes)
+
+            level_yvalues = [node.angle_y for node in level_nodes]
+            c_level = np.mean(level_yvalues)
+            
+            self.init_params += [c_level]
+            circuit.ry(Parameter(name=f"cluster[{c_lvl}]"), c_lvl)
 
     def _multiplex_parameters(
-            self, 
-            circuit: QuantumCircuit, 
-            parameters: List[Parameter], 
-            qubits: List[Qubit], 
+            self,
+            circuit: QuantumCircuit,
+            parameters: List[Parameter],
+            qubits: List[Qubit],
             reverse: bool = False
-        ) -> None: 
+        ) -> None:
 
         mat = [[0.5, 0.5],[0.5, -0.5]]
 
@@ -142,30 +159,24 @@ class SanchezAnsatz(BlueprintCircuit):
             sub_circ.cx(0, 1)
             if reverse: 
                 sub_circ = sub_circ.reverse_ops()
-            circuit.compose(sub_circ, qubits)
+            circuit.compose(sub_circ, qubits, inplace=True)
 
             return None
 
         params_length = len(parameters)
         eye_dim = int(np.log2(params_length))
 
-        block_matrix = np.kron(mat, np.eye(eye_dim-1))
+        block_matrix = np.kron(mat, np.eye(2**(eye_dim-1)))
         mux_param = np.dot(parameters, block_matrix).tolist()
 
-        qubits = circuit.qubits
-
-        self._multiplex_parameters(circuit, mux_param[0:params_length//2])
+        self._multiplex_parameters(circuit, mux_param[0:params_length//2], qubits[1:])
         circuit.cx(qubits[0], qubits[-1])
-        self._multiplex_parameters(circuit, mux_param[params_length//2:], reverse=True)
+        self._multiplex_parameters(circuit, mux_param[params_length//2:], qubits[1:], reverse=True)
         circuit.cx(qubits[0], qubits[-1])
 
         return None
 
-
-
-
-
-    def _define_parameters_for_node_list(self, level_idx: int, total_angles: int) -> List[Parameter]:
+    def _define_parameters_for_node_list(self, level_idx: int, total_angles: int, label="ry") -> List[Parameter]:
         """
         Creates a parameter list for the list of the nodes in the current level being explored
 
@@ -175,6 +186,6 @@ class SanchezAnsatz(BlueprintCircuit):
 
         total_angles: The total number of angles in the current level
         """
-        parameters =  [Parameter(name=f"p[{level_idx}, {param_idx}]") for param_idx in range(total_angles)]
+        parameters =  [Parameter(name=f"{label}[{level_idx}, {param_idx}]") for param_idx in range(total_angles)]
         return parameters
 
