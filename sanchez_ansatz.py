@@ -1,7 +1,7 @@
 from typing import Optional, Union, List
 import numpy  as np
 from qiskit import QuantumCircuit, QuantumRegister
-from qiskit.circuit import Qubit, Parameter
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import BlueprintCircuit
 from qclib.state_preparation.util.state_tree_preparation import (
     Amplitude,
@@ -10,7 +10,6 @@ from qclib.state_preparation.util.state_tree_preparation import (
 from qclib.state_preparation.util.angle_tree_preparation import create_angles_tree
 from qclib.state_preparation.util import tree_utils
 from qclib.state_preparation.util.angle_tree_preparation import NodeAngleTree
-from qclib.gates.ucr import ucr
 from qiskit.circuit.library import RZGate, RYGate, CXGate, CZGate, CYGate
 
 class SanchezAnsatz(BlueprintCircuit):
@@ -25,9 +24,10 @@ class SanchezAnsatz(BlueprintCircuit):
             self, 
             target_state: np.ndarray,
             eps: float,
-            eta: float = 4*np.pi,
+            eta: Optional[float] = 4*np.pi,
             name: Optional[str] = "SanchezAnsatz",
-            global_phase: Optional[bool] = False
+            global_phase: Optional[bool] = False,
+            build_modified: Optional[bool] = False
         ):
         """
         Parameters
@@ -48,6 +48,7 @@ class SanchezAnsatz(BlueprintCircuit):
         self.target_state = target_state
         self.global_phase = global_phase
         self.init_params = []
+        self.build_modified = build_modified
     
     def _check_configuration(self, raise_on_failure: bool = True) -> bool: 
         log2_params = np.log2(len(self.target_state))
@@ -135,11 +136,27 @@ class SanchezAnsatz(BlueprintCircuit):
                 parameters_z = self._define_parameters_for_node_list(level_idx, len(level_nodes), label="rz")
                 mux_circuit = self._multiplex_parameters(RZGate, parameters_z)
                 circuit.compose(mux_circuit, circuit.qubits[:level_idx+1], inplace=True)
-        
+
         cluster_levels = angle_levels[self.k0-1:]
-        self._clusterize_angles(cluster_levels, angle_tree, circuit)
         
-    def _clusterize_angles(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit):
+        if self.build_modified:
+            self._cluster_modified(cluster_levels, angle_tree, circuit)
+        else: 
+            self._clusterize_angles(cluster_levels, angle_tree, circuit)
+
+    def _clusterize_angles(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
+        """
+        Computes the representative angles for each level by computing centroid from the 
+        angles in each level
+
+        Parameters
+        ----------
+        cluster_levels: Level of the angle tree from which the angles are to be clustered
+
+        angle_tree: Tree containing the angles to be used in the rotations
+
+        circuit: The quantum circuit
+        """
 
         for c_lvl in cluster_levels:
             level_nodes = []
@@ -157,6 +174,52 @@ class SanchezAnsatz(BlueprintCircuit):
             self.init_params += [zc_level]
             circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), c_lvl)
 
+    def _cluster_modified(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
+
+        for level_idx, c_lvl in enumerate(cluster_levels):
+
+            level_nodes = []
+            tree_utils.subtree_level_nodes(angle_tree, c_lvl, level_nodes)
+
+            level_yvalues = [node.angle_y for node in level_nodes]
+            level_zvalues = [node.angle_z for node in level_nodes]
+
+            if any(level_yvalues):
+                slice_y = self._slice_angle_list(level_yvalues, c_lvl, level_idx)
+                clusters_y = np.mean(slice_y, axis=1)
+                clusters_yparams = self._define_parameters_for_node_list(level_idx, len(clusters_y), label="clu_ry")
+
+                # multiplexing ry values
+                mux_circuit = self._multiplex_parameters(RYGate, clusters_yparams)
+                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:c_lvl + 1], inplace=True)
+
+                # saving init params
+                self.init_params += clusters_y.tolist()
+
+            if any(level_yvalues):
+                slice_z = self._slice_angle_list(level_zvalues, c_lvl, level_idx)
+                clusters_z = np.mean(slice_z, axis=1)
+                clusters_zparams = self._define_parameters_for_node_list(level_idx, len(clusters_z), label="clu_rz")
+
+                # multiplexing rz values
+                mux_circuit = self._multiplex_parameters(RZGate, clusters_zparams)
+                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:c_lvl + 1], inplace=True)
+
+                # saving init params
+                self.init_params += clusters_z.tolist()
+
+    def _slice_angle_list(self, level_values: List[float], current_lvl: int, level_idx: int) -> List[List[float]]:
+        start = 0
+        slice_step = 2**(current_lvl - level_idx)
+        slices = []
+        while level_values[start:slice_step]:
+            slices += [level_values[start:slice_step]]
+
+            start = slice_step
+            slice_step += 2**(current_lvl - level_idx)
+
+        return slices
+
     def _multiplex_parameters(
             self,
             operation: Union[RYGate, RZGate],
@@ -170,23 +233,13 @@ class SanchezAnsatz(BlueprintCircuit):
             circuit = QuantumCircuit(1)
             circuit.append(operation(parameters[0]), [0])
             return circuit
-        elif len(parameters) == 2:
-            mux_param = np.dot(parameters, mat)
-
-            circuit = QuantumCircuit(2)
-            circuit.append(operation(mux_param[0]), [1])
-            circuit.append(c_operation(), [0, 1])
-            circuit.append(operation(mux_param[1]), [1])
-            circuit.append(c_operation(), [0, 1])
-            return circuit
 
         num_qubits = int(np.log2(len(parameters))) + 1
-        #qreg  = QuantumRegister(num_qubits)
-        circuit = QuantumCircuit(num_qubits)
-        q_index = list(range(num_qubits))
+        qreg = QuantumRegister(num_qubits)
+        circuit = QuantumCircuit(qreg)
 
-        control = q_index[0]
-        target = q_index[num_qubits-1]
+        control = qreg[0]
+        target = qreg[num_qubits-1]
 
         params_length = len(parameters)
         eye_dim = int(np.log2(params_length))
@@ -196,12 +249,12 @@ class SanchezAnsatz(BlueprintCircuit):
 
         #multiplexor
         mux_circ = self._multiplex_parameters(operation, mux_param[:params_length//2])
-        circuit.compose(mux_circ, q_index[0:-1], inplace=True)
+        circuit.compose(mux_circ, qreg[1:], inplace=True)
 
         circuit.append(c_operation(), [control, target])
 
         mux_circ = self._multiplex_parameters(operation, mux_param[params_length//2:])
-        circuit.compose(mux_circ.reverse_ops(), q_index[0:-1], inplace=True)
+        circuit.compose(mux_circ.reverse_ops(), qreg[1:], inplace=True)
 
         circuit.append(c_operation(), [control, target])
 
