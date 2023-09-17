@@ -140,9 +140,9 @@ class SanchezAnsatz(BlueprintCircuit):
         cluster_levels = angle_levels[self.k0-1:]
         
         if self.build_modified:
-            self._clusterize_angles(cluster_levels, angle_tree, circuit)
-        else: 
             self._cluster_modified(cluster_levels, angle_tree, circuit)
+        else: 
+            self._clusterize_angles(cluster_levels, angle_tree, circuit)
 
     def _clusterize_angles(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
         """
@@ -185,35 +185,37 @@ class SanchezAnsatz(BlueprintCircuit):
             level_zvalues = [node.angle_z for node in level_nodes]
 
             if any(level_yvalues):
-                slice_y = self._slice_angle_list(level_yvalues, level_idx, c_lvl)
+                slice_y = self._slice_angle_list(level_yvalues, c_lvl, level_idx)
                 clusters_y = np.mean(slice_y, axis=1)
                 clusters_yparams = self._define_parameters_for_node_list(level_idx, len(clusters_y), label="clu_ry")
-                
+
+                qubit_step = int(np.log2(len(clusters_yparams)))
                 # multiplexing ry values
                 mux_circuit = self._multiplex_parameters(RYGate, clusters_yparams)
-                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:level_idx+1], inplace=True)
+                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:c_lvl + 1], inplace=True)
 
                 # saving init params
                 self.init_params += clusters_y.tolist()
 
             if any(level_yvalues):
-                slice_z = self._slice_angle_list(level_zvalues, level_idx, c_lvl)
+                slice_z = self._slice_angle_list(level_zvalues, c_lvl, level_idx)
                 clusters_z = np.mean(slice_z, axis=1)
                 clusters_zparams = self._define_parameters_for_node_list(level_idx, len(clusters_z), label="clu_rz")
                 
+                qubit_step = int(np.log2(len(clusters_zparams)))
                 # multiplexing rz values
                 mux_circuit = self._multiplex_parameters(RZGate, clusters_zparams)
-                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:level_idx+1], inplace=True)
+                circuit.compose(mux_circuit, circuit.qubits[cluster_levels[0]:c_lvl + 1], inplace=True)
 
                 # saving init params
                 self.init_params += clusters_z.tolist()
 
-    def _slice_angle_list(self, level_yvalues: List[float], current_lvl: int, level_idx: int) -> List[List[float]]:
+    def _slice_angle_list(self, level_values: List[float], current_lvl: int, level_idx: int) -> List[List[float]]:
         start = 0
         slice_step = 2**(current_lvl - level_idx)
         slices = []
-        while level_yvalues[start:slice_step]:
-            slices += [level_yvalues[start:slice_step]]
+        while level_values[start:slice_step]:
+            slices += [level_values[start:slice_step]]
 
             start = slice_step
             slice_step += 2**(current_lvl - level_idx)
