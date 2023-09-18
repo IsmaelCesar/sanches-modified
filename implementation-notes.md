@@ -30,6 +30,6 @@ The angles are clusterized differently for either replicate or modified version.
     - For a qubit $q \in [k_0, n-1]$, the angles of each tree level are clusterized according to the number of representative angles to be multiplexed.
     The following image demonstrates what is taken into account for computing the representative angles.
 
-        ![Cluster](muxed-cluster.drawio.svg)
+        ![Cluster](muxed-cluster.drawio.png)
     
     The qubits in $[k_0, n-1]$ are used to determine how many representative angles should be computed from the angles at the $i$-th angle tree level.
