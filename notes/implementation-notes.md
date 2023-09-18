@@ -30,18 +30,13 @@ The angles are clusterized differently for either replicate or modified version.
     - For a qubit $q \in [k_0, n-1]$, the angles of each tree level are clusterized according to the number of representative angles to be multiplexed.
     The following image demonstrates what is taken into account for computing the representative angles.
 
-        <div>
-            <img src="./images/muxed-cluster.drawio.png">
-        </div>
+  ![Cluster](images/muxed-cluster.drawio.png)
     
     The qubits in $[k_0, n-1]$ are used to determine how many representative angles should be computed from the angles at the $i$-th angle tree level.
 
     For example. Let $k_0 = 2$. In a regular state preparation algorithm, the procedure navigating the tree at the $k_0+1$ level would apply a multiplexor of $2^3$ single-qubit gates.
-        <div>
-            <img src="./images/muxed-cluster-clusterizing-8angles.drawio.png">
-        </div>
+        
+  ![Angles](images/muxed-cluster-clusterizing-8angles.drawio.png)
     
     However, in the modified approach of [MARIN-SANCHES et al (2021)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.107.022421), we clusterize the angles into two representative angles based on the number of similar controls qubits their corresponding single-qubit operation have, from top to bottom. Those representative angles are then applied to the circuit using the $k_0+1$ qubit as target, and $k_0$ as control. The following image ilustrates how this works:
-        <div>
-            <img src="./images/muxed-cluster-applying-clusters.drawio.png">
-        </div>
+  ![muxed-cluster](images/muxed-cluster-applying-clusters.drawio.png)
