@@ -1,5 +1,6 @@
 qiskit
 qiskit_aer
 qclib
+pandas
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch
