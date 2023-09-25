@@ -17,7 +17,7 @@ import os
 from typing import Union, List
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.algorithms.optimizers import (
+from qiskit_algorithms.optimizers import (
     Optimizer,
     SPSA
 )
@@ -51,7 +51,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--basis_gates",
-     type="+", 
+     type=list,
+     nargs="+",
      default=["cx", "u"],
      help="Define the basis_gates to be used in the device"
 )
@@ -114,7 +115,7 @@ def experiments(
     state = np.random.rand(2**num_qubits)
     state = state / np.linalg.norm(state)
 
-    ansatz = SanchezAnsatz(target_state=state, eps=eps, eta=eta)
+    ansatz = SanchezAnsatz(target_state=state, eps=eps, eta=eta, build_modified=run_modified)
     
     init_params = ansatz.init_params
     t_ansatz  = transpile(ansatz, basis_gates=basis_gates)
