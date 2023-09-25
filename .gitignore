@@ -162,3 +162,5 @@ cython_debug/
 ## Aditional stuff
 # m test stands for manual test
 mtest_*.py
+
+results/*
