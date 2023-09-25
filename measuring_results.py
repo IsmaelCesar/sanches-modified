@@ -90,7 +90,8 @@ def compute_fidelity_loss(
 if __name__ == "__main__":
 
     qubit_range = [3, 10]
-    errors = [0.5, 0.1, 0.05, 0.01, 0.005, 0.001]
+    #errors = [0.5, 0.1, 0.05, 0.01, 0.005, 0.001]
+    errors = [0.001]
     for eps in errors:
         df_depth = compute_depth(qubit_range=qubit_range)
         print(df_depth)
