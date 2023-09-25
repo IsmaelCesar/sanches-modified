@@ -1,8 +1,8 @@
-qiskit
-qiskit_aer
-qiskit_algorithms
-qiskit_machine_learning
-qclib
+qiskit==0.44.1
+qiskit_aer==0.12.2
+qiskit_algorithms==0.2.1
+qiskit_machine_learning==0.6.1
+qclib==0.0.23
 pandas
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch

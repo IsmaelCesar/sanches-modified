@@ -18,7 +18,7 @@ from qiskit_algorithms.optimizers import SPSA
 from argparse import ArgumentParser
 from sanchez_ansatz import SanchezAnsatz
 from qiskit import transpile
-from experiment_module import ExperimentModule
+from experiments import ExperimentModule
 
 parser = ArgumentParser()
 parser.add_argument("--num_qubits", type=int, help="The number of qubits in the system")
