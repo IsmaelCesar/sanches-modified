@@ -10,11 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from experiment_module import ExperimentModule
+from .experiment_module import ExperimentModule
 from .util import (
         save_plots,
         write_row,
-        write_opcounts
+        write_opcounts,
+        save_circuit
     )
 
 
@@ -22,5 +23,6 @@ __all__ = [
     "ExperimentModule",
     "save_plots",
     "write_row",
-    "write_opcounts"
+    "write_opcounts",
+    "save_circuit"
 ]

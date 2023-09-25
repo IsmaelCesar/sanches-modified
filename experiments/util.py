@@ -12,9 +12,12 @@
 
 import os
 import csv
+import pickle as pkl
+from qiskit import QuantumCircuit
 from .experiment_module import ExperimentModule
 import matplotlib.pyplot as plt
 
+# -- procedures for writing data
 
 def save_plots(
         em_original: ExperimentModule,
@@ -62,3 +65,6 @@ def write_opcounts(
         txt_file.write(f"Op count ORIGINAL: {em_oiginal._ansatz.depth()}\n")
         txt_file.write(f"Op count MODIFIED: {em_modified._ansatz.depth()}\n")
 
+def save_circuit(circuit: QuantumCircuit, file="circuit.pkl"): 
+    with open(file, "wb") as f: 
+        pkl.dump(circuit, f)
