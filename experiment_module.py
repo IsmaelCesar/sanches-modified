@@ -33,6 +33,19 @@ class ExperimentModule():
         self._target_state = target_state
         self._init_params = init_params
         self._loss_progression = []
+        self.result = None
+
+    @property
+    def num_qubits(self) -> int:
+        return self._ansatz.num_qubits
+
+    @property
+    def result(self) -> Result:
+        return self._result
+
+    @result.setter
+    def result(self, value: Result) -> Result:
+        self._result = value
 
     def _get_statevector(self, x) -> np.ndarray: 
         sv_sim = Aer.get_backend("statevector_simulator")
@@ -61,4 +74,6 @@ class ExperimentModule():
         if init_params is None:
             init_params = np.pi / 4 * np.random.rand(self.ansatz.num_parameters)
 
-        return self._optimizer.minimize(self._objectivive_fn(), x0=init_params)
+        self.result = self._optimizer.minimize(self._objectivive_fn(), x0=init_params)
+        return self.result
+
