@@ -13,19 +13,12 @@
 # contains code for executing a single iteration of the 
 # experiment
 
-import os
-from typing import Union, List
 import numpy as np
-from qiskit import QuantumCircuit
-from qiskit_algorithms.optimizers import (
-    Optimizer,
-    SPSA
-)
-from qiskit.result import Result
-from qiskit_aer import Aer
+from qiskit_algorithms.optimizers import SPSA
 from argparse import ArgumentParser
 from sanchez_ansatz import SanchezAnsatz
 from qiskit import transpile
+from experiment_module import ExperimentModule
 
 parser = ArgumentParser()
 parser.add_argument("--num_qubits", type=int, help="The number of qubits in the system")
@@ -57,51 +50,6 @@ parser.add_argument(
      help="Define the basis_gates to be used in the device"
 )
 args = parser.parse_args()
-
-
-class ExperimentModule(): 
-
-    def __init__(
-        self, 
-        ansatz: QuantumCircuit,
-        optimizer: Optimizer,
-        target_state: np.ndarray,
-        init_params: Union[List[float],np.ndarray] = None,
-    ):
-        self._ansatz = ansatz
-        self._optimizer = optimizer
-        self._target_state = target_state
-        self._init_params = init_params
-        self._loss_progression = []
-
-    def _get_statevector(self, x) -> np.ndarray: 
-        sv_sim = Aer.get_backend("statevector_simulator")
-        param_circ = self._ansatz.assign_parameters(x)
-        job = sv_sim.run(param_circ)
-        result = job.result()
-        statevector = result.get_statevector()
-        return statevector.data
-
-    def _callback_fn(self, value) -> None: 
-        self._loss_progression += [value]
-
-    def _objectivive_fn(self) -> callable:
-        def objective_fid(x):
-            state_vec = self._get_statevector(x)
-            fid_loss = 1 - np.abs(self._target_state @ state_vec) ** 2
-            
-            self._callback_fn(fid_loss)
-            return fid_loss
-
-        return objective_fid
-
-    def minimize(self) -> Result:
-
-        init_params = self._init_params
-        if init_params is None:
-            init_params = np.pi / 4 * np.random.rand(self.ansatz.num_parameters)
-
-        return self._optimizer.minimize(self._objectivive_fn(), x0=init_params)
 
 def experiments(
     num_qubits: int,
