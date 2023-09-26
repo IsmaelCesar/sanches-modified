@@ -34,9 +34,8 @@ def save_plots(
     plt.clf()
     plt.close()
 
-def write_row(data, file="results/data.csv") -> None:
+def write_row(data, file="results/data.csv", mode: str ="w+") -> None:
 
-    mode =  "w+"
     if os.path.exists(file):
         mode = "a+"
 
@@ -68,3 +67,8 @@ def write_opcounts(
 def save_circuit(circuit: QuantumCircuit, file="circuit.pkl"): 
     with open(file, "wb") as f: 
         pkl.dump(circuit, f)
+
+def load_circuit(file: str) -> QuantumCircuit:
+    with open(file, "rb") as f:
+        circuit = pkl.load(f)
+    return circuit

@@ -15,7 +15,8 @@ from .util import (
         save_plots,
         write_row,
         write_opcounts,
-        save_circuit
+        save_circuit,
+        load_circuit
     )
 
 
@@ -24,5 +25,6 @@ __all__ = [
     "save_plots",
     "write_row",
     "write_opcounts",
-    "save_circuit"
+    "save_circuit",
+    "load_circuit"
 ]
