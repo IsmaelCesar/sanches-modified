@@ -16,7 +16,8 @@ from .util import (
         write_row,
         write_opcounts,
         save_circuit,
-        load_circuit
+        load_circuit,
+        create_dir
     )
 
 
@@ -26,5 +27,6 @@ __all__ = [
     "write_row",
     "write_opcounts",
     "save_circuit",
-    "load_circuit"
+    "load_circuit",
+    "create_dir",
 ]
