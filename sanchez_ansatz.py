@@ -152,7 +152,17 @@ class SanchezAnsatz(BlueprintCircuit):
         cluster_levels = angle_levels[self.k0-1:]
         
         if self.build_modified:
-            self._cluster_modified(cluster_levels, angle_tree, circuit)
+            start_slice = self.k0 - 1
+            end_slice = 2*self.k0 - 2
+            odd = len(cluster_levels) % 2
+
+            for _ in range(len(cluster_levels) // (self.k0 - 1) + odd):
+                level_slice = cluster_levels[start_slice: end_slice]
+                self._cluster_modified(level_slice, angle_tree, circuit)
+
+                start_slice = end_slice
+                end_slice += self.k0-1
+
         else: 
             self._clusterize_angles(cluster_levels, angle_tree, circuit)
 
@@ -177,14 +187,15 @@ class SanchezAnsatz(BlueprintCircuit):
             level_yvalues = [node.angle_y for node in level_nodes]
             level_zvalues = [node.angle_z for node in level_nodes]
 
-            yc_level = np.mean(level_yvalues)
-            zc_level = np.mean(level_zvalues)
-            
-            self.init_params += [yc_level]
-            circuit.ry(Parameter(name=f"cluster_y[{c_lvl}]"), c_lvl)
+            if any(level_yvalues):
+                yc_level = np.mean(level_yvalues)
+                self.init_params += [yc_level]
+                circuit.ry(Parameter(name=f"cluster_y[{c_lvl}]"), c_lvl)
 
-            self.init_params += [zc_level]
-            circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), c_lvl)
+            if any(level_zvalues):                
+                zc_level = np.mean(level_zvalues)
+                self.init_params += [zc_level]
+                circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), c_lvl)
 
     def _cluster_modified(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
 
@@ -199,7 +210,7 @@ class SanchezAnsatz(BlueprintCircuit):
             if any(level_yvalues):
                 slice_y = self._slice_angle_list(level_yvalues, c_lvl, level_idx)
                 clusters_y = np.mean(slice_y, axis=1)
-                clusters_yparams = self._define_parameters_for_node_list(level_idx, len(clusters_y), label="clu_ry")
+                clusters_yparams = self._define_parameters_for_node_list(c_lvl, len(clusters_y), label="clu_ry")
 
                 # multiplexing ry values
                 mux_circuit = self._multiplex_parameters(RYGate, clusters_yparams)
@@ -208,10 +219,10 @@ class SanchezAnsatz(BlueprintCircuit):
                 # saving init params
                 self.init_params += clusters_y.tolist()
 
-            if any(level_yvalues):
+            if any(level_zvalues):
                 slice_z = self._slice_angle_list(level_zvalues, c_lvl, level_idx)
                 clusters_z = np.mean(slice_z, axis=1)
-                clusters_zparams = self._define_parameters_for_node_list(level_idx, len(clusters_z), label="clu_rz")
+                clusters_zparams = self._define_parameters_for_node_list(c_lvl, len(clusters_z), label="clu_rz")
 
                 # multiplexing rz values
                 mux_circuit = self._multiplex_parameters(RZGate, clusters_zparams)
