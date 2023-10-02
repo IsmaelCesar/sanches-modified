@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import os
 import csv
 import pickle as pkl
@@ -76,3 +77,12 @@ def load_circuit(file: str) -> QuantumCircuit:
 def create_dir(dir_name: str): 
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
+
+def get_random_state(num_qubits, seed=7, complex=False):
+    rng = np.random.default_rng(seed)
+    state = rng.random(2**num_qubits)
+
+    if complex:
+        state = rng.random(2**num_qubits) + 1j*rng.random(2**num_qubits)
+
+    return state /np.linalg.norm(state)

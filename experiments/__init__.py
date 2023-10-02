@@ -17,7 +17,8 @@ from .util import (
         write_opcounts,
         save_circuit,
         load_circuit,
-        create_dir
+        create_dir,
+        get_random_state
     )
 
 
@@ -29,4 +30,5 @@ __all__ = [
     "save_circuit",
     "load_circuit",
     "create_dir",
+    "get_random_state"
 ]
