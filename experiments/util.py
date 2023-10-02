@@ -72,3 +72,7 @@ def load_circuit(file: str) -> QuantumCircuit:
     with open(file, "rb") as f:
         circuit = pkl.load(f)
     return circuit
+
+def create_dir(dir_name: str): 
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)

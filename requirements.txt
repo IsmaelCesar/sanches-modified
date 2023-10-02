@@ -4,5 +4,7 @@ qiskit_algorithms==0.2.1
 qiskit_machine_learning==0.6.1
 qclib==0.0.23
 pandas
+jupyter
+ipykernel
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch
