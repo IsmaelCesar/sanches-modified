@@ -78,11 +78,11 @@ def create_dir(dir_name: str):
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
 
-def get_random_state(num_qubits, seed=7, complex=False):
+def get_random_state(num_qubits, seed=7, complex_state=False):
     rng = np.random.default_rng(seed)
     state = rng.random(2**num_qubits)
 
-    if complex:
+    if complex_state:
         state = rng.random(2**num_qubits) + 1j*rng.random(2**num_qubits)
 
     return state /np.linalg.norm(state)
