@@ -121,12 +121,18 @@ class SanchezAnsatz(BlueprintCircuit):
     def _build_define(self, circuit: QuantumCircuit) -> QuantumCircuit:
 
         amps = [Amplitude(amp_idx, amp_value) for amp_idx, amp_value in enumerate(self.target_state)]
+        
+        # creating state tree
         state_tree = state_decomposition(self.num_qubits, amps)
+        
+        # extracting data about the angle tree
         angle_tree = create_angles_tree(state_tree)
+        angle_tree_height = tree_utils.height(angle_tree)
+        angle_tree_levels = list(range(angle_tree_height))
 
         angle_levels = list(range(0, self.num_qubits))
 
-        top_levels = angle_levels[0:self.k0 - 1]
+        top_levels = angle_tree_levels[ : self.k0]
 
         for level_idx in top_levels:
             level_nodes = []
@@ -149,19 +155,19 @@ class SanchezAnsatz(BlueprintCircuit):
                 mux_circuit = self._multiplex_parameters(RZGate, parameters_z)
                 circuit.compose(mux_circuit, circuit.qubits[:level_idx+1], inplace=True)
 
-        cluster_levels = angle_levels[self.k0-1:]
+        cluster_levels = angle_levels[self.k0:]
         
         if self.build_modified:
-            start_slice = self.k0 - 1
-            end_slice = 2*self.k0 - 2
+            start_slice = 0
+            end_slice = len(top_levels)
             odd = len(cluster_levels) % 2
 
-            for _ in range(len(cluster_levels) // (self.k0 - 1) + odd):
+            for _ in range(len(cluster_levels) // (end_slice - start_slice) + odd):
                 level_slice = cluster_levels[start_slice: end_slice]
                 self._cluster_modified(level_slice, angle_tree, circuit)
 
                 start_slice = end_slice
-                end_slice += self.k0-1
+                end_slice += len(top_levels)
 
         else: 
             self._clusterize_angles(cluster_levels, angle_tree, circuit)
