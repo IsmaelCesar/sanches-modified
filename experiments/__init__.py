@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from .experiment_module import ExperimentModule
+from .create_state import get_state
 from .util import (
         save_plots,
         write_row,
@@ -18,7 +19,8 @@ from .util import (
         save_circuit,
         load_circuit,
         create_dir,
-        get_random_state
+        get_random_state,
+        get_sparse_random
     )
 
 
@@ -30,5 +32,7 @@ __all__ = [
     "save_circuit",
     "load_circuit",
     "create_dir",
-    "get_random_state"
+    "get_random_state",
+    "get_sparse_random",
+    "get_state"
 ]
