@@ -13,6 +13,7 @@
 import copy
 import re
 import pandas as pd
+import os
 import numpy as np
 from experiments import ExperimentModule
 from experiments import (
@@ -105,32 +106,85 @@ def run(results_dir: str,
         state_params: dict,
         run_idx: int,
         verbose: bool):
-    #create_dir(results_dir)
+    create_dir(results_dir)
 
     # setting up logging
-    #logger = logging.getLogger("run-logger")
-    #formatter = logging.Formatter('%(asctime)s - %(message)s')
-    #stream_handler = logging.StreamHandler()
-    #stream_handler.setFormatter(formatter)
-    #file_handler = logging.FileHandler(f"{results_dir}/run-{run_idx}.log", mode="a+")
-    #file_handler.setFormatter(formatter)
+    logger = logging.getLogger("run-logger")
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
 
-    #logger.addHandler(stream_handler)
-    #logger.addHandler(file_handler)
+    if verbose:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+    file_handler = logging.FileHandler(f"{results_dir}/run-{run_idx}.log", mode="a+")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
     #===================
-    print("Results dir: ", results_dir)
-    print("Num qubits: ", num_qubits)
-    print("State Type: ", state_type)
-    print("Eps: ", eps)
-    print("Eta: ", eta)
-    print("State Params: ", state_params)
-    print("Run idx: ", run_idx)
-    print("Verbose: ", verbose)
+    logger.info("--"*50)
+    logger(f"\t\t Experiments for {num_qubits} qubits and {eps} error")
+    logger("--"*50)
 
+    logger.info("--"*50)
+    logger.info("\t\t Running ORIGINAL Method")
+    logger.info("--"*50)
+
+    state = get_state(num_qubits, state_type, state_params)
+
+    sanchez = SanchezAnsatz(state, eps, eta)
+
+    init_params = sanchez.init_params
+
+    t_sanchez = transpile(sanchez, basis_gates=["cx", "u"])
+
+    em_original = ExperimentModule(
+                    t_sanchez,
+                    SPSA(maxiter=1000),
+                    target_state=state,
+                    init_params=init_params
+                )
+
+    result_original = em_original.minimize()
+
+    logger.info("--"*50)
+    logger.info("\t\t Running MODIFIED Method")
+    logger.info("--"*50)
+
+    m_sanchez = SanchezAnsatz(state, eps, build_modified=True)
+
+    init_params = m_sanchez.init_params
+    tm_sanchez = transpile(m_sanchez, basis_gates=["cx", "u"])
+
+    em_modified = ExperimentModule(
+                    tm_sanchez,
+                    SPSA(maxiter=1000),
+                    target_state=state,
+                    init_params=init_params
+                )
+
+    result_modified = em_modified.minimize()
     
+    #=======================================
+    run_dir = os.join(f"{results_dir}/run_{run_idx}")
 
+    save_plots(em_original, em_modified, f"{run_dir}/plots/plot_{num_qubits}qb_{eps}eps.pdf")
+
+    # writing csv loss progression
+    write_row(em_original._loss_progression, file=f"{run_dir}/csv/original_fidloss_{num_qubits}qb_{eps}eps.csv")
+    write_row(em_modified._loss_progression, file=f"{run_dir}/csv/modified_fidloss_{num_qubits}qb_{eps}eps.csv")
+
+    # writing csv best point
+    write_row(em_original.result.x, file=f"{run_dir}/csv/original_xbest_{num_qubits}qb_{eps}eps.csv")
+    write_row(em_modified.result.x, file=f"{run_dir}/csv/modified_xbest_{num_qubits}qb_{eps}eps.csv")
+
+    # writing op_counts
+    write_opcounts(em_original, em_modified, file=f"{run_dir}/op_counts/counts_{num_qubits}qb_{eps}eps.txt")
+
+    # saving circuits
+    save_circuit(em_original._ansatz, file=f"{run_dir}/circuits/original_curcuit_{num_qubits}qb_{eps}eps.pkl")
+    save_circuit(em_modified._ansatz, file=f"{run_dir}/circuits/modified_curcuit_{num_qubits}qb_{eps}eps.pkl")
 
 if __name__ == "__main__":
-    #args_dict = dict(args._get_kwargs())
-    #run(**args_dict)
-    state = _get_state(7, "lognormal", {"x_points": (0, 20), "s": 1, "loc": 1, "scale": 0.5})
+    args_dict = dict(args._get_kwargs())
+    run(**args_dict)
