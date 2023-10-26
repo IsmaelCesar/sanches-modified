@@ -44,9 +44,12 @@ class ParseKvAction(Action):
         setattr(namespace, self.dest, dict())
 
         for v in values:
-           try: 
+           try:
               key, value = v.split("=")
-              getattr(namespace, self.dest)[key] = float(value)
+              if key == "complex_state": 
+                getattr(namespace, self.dest)[key] = bool(value)
+              else:               
+                getattr(namespace, self.dest)[key] = float(value)
            except Exception as e:
               print("Invalid Input: ", v)
               print(e)
@@ -108,6 +111,15 @@ def run(results_dir: str,
         verbose: bool):
     create_dir(results_dir)
 
+    run_dir = os.path.join(f"{results_dir}", f"run_{run_idx}")
+
+    # creating directories
+    create_dir(run_dir)
+    create_dir(f"{run_dir}/plots")
+    create_dir(f"{run_dir}/csv")
+    create_dir(f"{run_dir}/op_counts")
+    create_dir(f"{run_dir}/circuits")
+
     # setting up logging
     logger = logging.getLogger("run-logger")
     logger.setLevel(logging.INFO)
@@ -123,8 +135,8 @@ def run(results_dir: str,
     logger.addHandler(file_handler)
     #===================
     logger.info("--"*50)
-    logger(f"\t\t Experiments for {num_qubits} qubits and {eps} error")
-    logger("--"*50)
+    logger.info(f"\t\t Experiments for {num_qubits} qubits and {eps} error")
+    logger.info("--"*50)
 
     logger.info("--"*50)
     logger.info("\t\t Running ORIGINAL Method")
@@ -166,7 +178,7 @@ def run(results_dir: str,
     result_modified = em_modified.minimize()
     
     #=======================================
-    run_dir = os.join(f"{results_dir}/run_{run_idx}")
+    
 
     save_plots(em_original, em_modified, f"{run_dir}/plots/plot_{num_qubits}qb_{eps}eps.pdf")
 

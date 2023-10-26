@@ -17,7 +17,7 @@ def get_state(num_qubits: int, state_type: str, state_params: dict) -> np.ndarra
 
     if state_type == "random":
         return get_random_state(num_qubits, **state_params)
-    elif state_type == "sparse": 
+    elif state_type == "random-sparse": 
         return get_sparse_random(num_qubits, **state_params)
     else:
         x = np.linspace(*state_params["x_points"], num=2**num_qubits)
