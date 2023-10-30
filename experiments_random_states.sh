@@ -11,14 +11,14 @@ do
     do
         for qubit_idx in ${qubits_array[@]}
         do
-            python -m experiment_procedures --results-dir results/runs_shell/random_state --num-qubits $qubit_idx --state-type random --state-params complex_state=False --eps $eps_val --run-idx $run_idx --verbose
-            python -m experiment_procedures --results-dir results/runs_shell/random_complex_state --num-qubits $qubit_idx --state-type random --state-params complex_state=True --eps $eps_val --run-idx $run_idx --verbose
+            python -m experiment_procedures --results-dir results/runs_shell/random_state --num-qubits $qubit_idx --state-type random --state-params complex_state=False --eps $eps_val --run-idx $run_idx --verbose --device CPU
+            python -m experiment_procedures --results-dir results/runs_shell/random_complex_state --num-qubits $qubit_idx --state-type random --state-params complex_state=True --eps $eps_val --run-idx $run_idx --verbose --device CPU
         done
     done
 done
 
 # random sparse state
-densities=(0.2 0.3 0.4 0.5)
+densities=(0.3 0.4 0.5)
 for run_idx in ${run[@]}
 do
     for eps_val in ${eps_arr[@]}
@@ -27,8 +27,8 @@ do
         do
             for density in ${densities[@]}
             do
-                python -m experiment_procedures --results-dir results/runs_shell/random_sparse_state --num-qubits $qubit_idx --state-type random-sparse --state-params complex_state=False density=$density --eps $eps_val --run-idx $run_idx --verbose
-                python -m experiment_procedures --results-dir results/runs_shell/random_complex_sparse_state --num-qubits $qubit_idx --state-type random-sparse --state-params complex_state=True density=$density --eps $eps_val --run-idx $run_idx --verbose
+                python -m experiment_procedures --results-dir results/runs_shell/random_sparse_state --num-qubits $qubit_idx --state-type random-sparse --state-params complex_state=False density=$density --eps $eps_val --run-idx $run_idx --verbose --device CPU
+                python -m experiment_procedures --results-dir results/runs_shell/random_complex_sparse_state --num-qubits $qubit_idx --state-type random-sparse --state-params complex_state=True density=$density --eps $eps_val --run-idx $run_idx --verbose --device CPU
             done
         done
     done
