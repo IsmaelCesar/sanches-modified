@@ -15,6 +15,7 @@ import os
 import csv
 import pickle as pkl
 from qiskit import QuantumCircuit
+from scipy import sparse
 from .experiment_module import ExperimentModule
 import matplotlib.pyplot as plt
 
@@ -86,3 +87,27 @@ def get_random_state(num_qubits, seed=7, complex_state=False):
         state = rng.random(2**num_qubits) + 1j*rng.random(2**num_qubits)
 
     return state /np.linalg.norm(state)
+
+def _get_sparse_array(num_qubits: int, density: float, rng: np.random.Generator, complex_state=False): 
+    dok_matrix = sparse.random(2**num_qubits, 
+                               1, 
+                               density=density, 
+                               random_state=rng,
+                               format="dok")
+    dtype = np.float32
+    if complex_state:
+        dtype = np.complex64
+    
+    sparse_arr = np.zeros((2**num_qubits,), dtype=dtype)
+    for key, value in dok_matrix.items():
+        if not complex_state:
+            sparse_arr[key[0]] = value
+        else:
+            sparse_arr[key[0]] = value + 1j*rng.random()
+            
+    return sparse_arr
+
+def get_sparse_random(num_qubits, density, seed=7, complex_state=False):
+    rng = np.random.default_rng(seed)
+    state = _get_sparse_array(num_qubits, density, rng, complex_state=complex_state)
+    return state / np.linalg.norm(state)
