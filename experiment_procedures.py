@@ -98,6 +98,11 @@ parser.add_argument("--run-idx",
                     default=0,
                     required=False,
                     help="The index of the current-execution")
+parser.add_argument("--device", 
+                    type=str,
+                    default="GPU",
+                    required=False,
+                    help="Tell the QiskitAer whether to user CPU or GPU")
 parser.add_argument("--verbose", default=False, action="store_true")
 args = parser.parse_args()
 
@@ -108,6 +113,7 @@ def run(results_dir: str,
         eta: float,
         state_params: dict,
         run_idx: int,
+        device: str,
         verbose: bool):
     create_dir(results_dir)
 
@@ -154,7 +160,8 @@ def run(results_dir: str,
                     t_sanchez,
                     SPSA(maxiter=1000),
                     target_state=state,
-                    init_params=init_params
+                    init_params=init_params,
+                    device=device
                 )
 
     result_original = em_original.minimize()

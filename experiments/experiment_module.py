@@ -18,6 +18,7 @@ from qiskit import QuantumCircuit
 from qiskit_algorithms.optimizers import Optimizer
 from qiskit.result import Result
 from qiskit_aer import Aer
+from qiskit_aer.backends.statevector_simulator import StatevectorSimulator
 
 class ExperimentModule(): 
 
@@ -27,12 +28,14 @@ class ExperimentModule():
         optimizer: Optimizer,
         target_state: np.ndarray,
         init_params: Union[List[float],np.ndarray] = None,
+        device: str = "CPU",
     ):
         self._ansatz = ansatz
         self._optimizer = optimizer
         self._target_state = target_state
         self._init_params = init_params
         self._loss_progression = []
+        self.sv_sim = device
         self.result = None
 
     @property
@@ -47,10 +50,19 @@ class ExperimentModule():
     def result(self, value: Result) -> Result:
         self._result = value
 
+    @property
+    def sv_sim(self) -> StatevectorSimulator:
+        return self._sv_sim
+
+    @sv_sim.setter
+    def sv_sim(self, device: str) -> None:
+        self._sv_sim = Aer.get_backend("statevector_simulator")
+        self._sv_sim.set_options(device=device)
+
     def _get_statevector(self, x) -> np.ndarray: 
-        sv_sim = Aer.get_backend("statevector_simulator")
+        #sv_sim = Aer.get_backend("statevector_simulator")
         param_circ = self._ansatz.assign_parameters(x)
-        job = sv_sim.run(param_circ)
+        job = self.sv_sim.run(param_circ)
         result = job.result()
         statevector = result.get_statevector()
         return statevector.data
