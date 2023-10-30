@@ -4,7 +4,6 @@ eps_arr=(0.5 0.1 0.05 0.01)
 run=(1 2 3 4 5 6 7 8 9 10)
 qubits_array=(3 4 5 6 7 8)
 
-
 # random dense state
 for run_idx in ${run[@]}
 do
@@ -19,7 +18,7 @@ do
 done
 
 # random sparse state
-densities=(0.1 0.2 0.3 0.4 0.5)
+densities=(0.2 0.3 0.4 0.5)
 for run_idx in ${run[@]}
 do
     for eps_val in ${eps_arr[@]}
