@@ -43,14 +43,23 @@ def get_probability_freqs(
         x_pmf += 1e-10
 
     elif density == "bimodal":
-        density_params = { "bim1": {"loc": 5, "scale": 2}, "bim2": { "loc": 15, "scale": 2} }\
+        density_params = { "loc_bim1": 5, "scale_bim1": 2, 
+                           "loc_bim2": 15, "scale_bim2": 2} \
                             if not density_params else density_params
-        xcdf_plus_bim1 = norm.cdf(x_points + delta, **density_params["bim1"])
-        xcdf_minus_bim1 = norm.cdf(x_points - delta, **density_params["bim1"])
+        xcdf_plus_bim1 = norm.cdf(x_points + delta, 
+                                  loc=density_params["loc_bim1"], 
+                                  scale=density_params["scale_bim1"])
+        xcdf_minus_bim1 = norm.cdf(x_points - delta, 
+                                   loc=density_params["loc_bim1"],
+                                   scale=density_params["scale_bim1"])
         x_pmf_bim1 = xcdf_plus_bim1 - xcdf_minus_bim1
 
-        xcdf_plus_bim2 = norm.cdf(x_points + delta, **density_params["bim2"])
-        xcdf_minus_bim2 = norm.cdf(x_points - delta, **density_params["bim2"])
+        xcdf_plus_bim2 = norm.cdf(x_points + delta, 
+                                  loc=density_params["loc_bim2"],
+                                  scale=density_params["scale_bim2"])
+        xcdf_minus_bim2 = norm.cdf(x_points - delta, 
+                                   loc=density_params["loc_bim2"],
+                                   scale=density_params["scale_bim2"])
         x_pmf_bim2 = xcdf_plus_bim2 - xcdf_minus_bim2
 
         x_pmf = x_pmf_bim1 + x_pmf_bim2
