@@ -48,6 +48,8 @@ class ParseKvAction(Action):
               key, value = v.split("=")
               if key == "complex_state": 
                 getattr(namespace, self.dest)[key] = bool(value)
+              elif key == "x_points":
+                 getattr(namespace, self.dest)[key] = tuple([int(digits) for digits in re.findall(r"\d+", value) ])
               else:               
                 getattr(namespace, self.dest)[key] = float(value)
            except Exception as e:
