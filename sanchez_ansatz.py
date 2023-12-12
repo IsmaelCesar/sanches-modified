@@ -254,7 +254,7 @@ class SanchezAnsatz(BlueprintCircuit):
             operation: Union[RYGate, RZGate],
             parameters: List[Parameter],
             c_operation: Union[CXGate, CZGate, CYGate] = CXGate
-        ) -> None:
+        ) -> QuantumCircuit:
 
         mat = [[0.5, 0.5],[0.5, -0.5]]
 
