@@ -123,6 +123,12 @@ def run(results_dir: str,
 
     # creating directories
     create_dir(run_dir)
+
+    if "density" in state_params: 
+       density_value = state_params["density"]
+       run_dir = os.path.join(run_dir, f"density_{state_params[density_value]}")
+       create_dir(run_dir)
+
     create_dir(f"{run_dir}/plots")
     create_dir(f"{run_dir}/csv")
     create_dir(f"{run_dir}/op_counts")
