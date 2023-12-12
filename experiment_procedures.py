@@ -26,7 +26,7 @@ from experiments import (
 )
 from sanchez_ansatz import SanchezAnsatz
 from qiskit import transpile
-from qiskit_algorithms.optimizers import SPSA
+from qiskit_algorithms.optimizers import SPSA, COBYLA
 from itertools import product
 from experiments.densities import get_probability_freqs
 from argparse import ArgumentParser, Action
@@ -123,6 +123,12 @@ def run(results_dir: str,
 
     # creating directories
     create_dir(run_dir)
+
+    if "density" in state_params: 
+       density_value = state_params["density"]
+       run_dir = os.path.join(run_dir, f"density_{density_value}")
+       create_dir(run_dir)
+
     create_dir(f"{run_dir}/plots")
     create_dir(f"{run_dir}/csv")
     create_dir(f"{run_dir}/op_counts")
@@ -160,7 +166,7 @@ def run(results_dir: str,
 
     em_original = ExperimentModule(
                     t_sanchez,
-                    SPSA(maxiter=1000),
+                    COBYLA(maxiter=3000),
                     target_state=state,
                     init_params=init_params,
                     device=device
@@ -179,7 +185,7 @@ def run(results_dir: str,
 
     em_modified = ExperimentModule(
                     tm_sanchez,
-                    SPSA(maxiter=1000),
+                    COBYLA(maxiter=3000),
                     target_state=state,
                     init_params=init_params
                 )

@@ -2,7 +2,7 @@
 
 eps_arr=(0.5 0.1 0.05 0.01)
 run=(1 2 3 4 5 6 7 8 9 10)
-qubits_array=(3 4 5 6 7 8)
+qubits_array=(3 4 5 6 7 8 9 10 11 12 13 14 15)
 
 # random dense state
 for run_idx in ${run[@]}
