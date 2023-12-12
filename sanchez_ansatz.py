@@ -134,6 +134,8 @@ class SanchezAnsatz(BlueprintCircuit):
 
         top_levels = angle_tree_levels[ : self.k0]
 
+        reverse_qubits = circuit.qubits[::-1]
+
         for level_idx in top_levels:
             level_nodes = []
             tree_utils.subtree_level_nodes(angle_tree, level_idx, level_nodes)
@@ -147,13 +149,14 @@ class SanchezAnsatz(BlueprintCircuit):
                 parameters_y = self._define_parameters_for_node_list(level_idx, len(level_nodes))
 
                 mux_circuit = self._multiplex_parameters(RYGate, parameters_y)
-                circuit.compose(mux_circuit, circuit.qubits[:level_idx+1], inplace=True)
+                #circuit.compose(mux_circuit, circuit.qubits[:level_idx+1], inplace=True)
+                circuit.compose(mux_circuit, reverse_qubits[:level_idx+1], inplace=True)
 
             if any(init_params_z):
                 self.init_params += init_params_z
                 parameters_z = self._define_parameters_for_node_list(level_idx, len(level_nodes), label="rz")
                 mux_circuit = self._multiplex_parameters(RZGate, parameters_z)
-                circuit.compose(mux_circuit, circuit.qubits[:level_idx+1], inplace=True)
+                circuit.compose(mux_circuit, reverse_qubits[:level_idx+1], inplace=True)
 
         cluster_levels = angle_levels[self.k0:]
         
