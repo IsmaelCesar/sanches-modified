@@ -57,6 +57,7 @@ class SanchezAnsatz(BlueprintCircuit):
         super().__init__(name=name)
         self.num_qubits = int(np.log2(len(target_state)))
         self.k0 = self._compute_k0(eps, eta)
+        self.eta = eta
         self.target_state = target_state
         self.global_phase = global_phase
         self.init_params = []
@@ -188,23 +189,29 @@ class SanchezAnsatz(BlueprintCircuit):
 
         circuit: The quantum circuit
         """
-
+        reversed_qubit = circuit.qubits[::-1]
         for c_lvl in cluster_levels:
             level_nodes = []
             tree_utils.subtree_level_nodes(angle_tree, c_lvl, level_nodes)
 
-            level_yvalues = [node.angle_y for node in level_nodes]
-            level_zvalues = [node.angle_z for node in level_nodes]
+            level_yvalues = np.array([node.angle_y for node in level_nodes])
+            level_zvalues = np.array([node.angle_z for node in level_nodes])
+
+            
+            #delta = 1 / (len(level_yvalues) - 1)
+            #bound_1 = delta / 4 * self.eta
+            #bound_2 = delta / 8 * self.eta
 
             if any(level_yvalues):
+                #yc_level = np.mean(bound_2 + level_yvalues)
                 yc_level = np.mean(level_yvalues)
                 self.init_params += [yc_level]
-                circuit.ry(Parameter(name=f"cluster_y[{c_lvl}]"), c_lvl)
+                circuit.ry(Parameter(name=f"cluster_y[{c_lvl}]"), reversed_qubit[c_lvl])
 
             if any(level_zvalues):                
                 zc_level = np.mean(level_zvalues)
                 self.init_params += [zc_level]
-                circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), c_lvl)
+                circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), reversed_qubit[c_lvl])
 
     def _cluster_modified(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
 
