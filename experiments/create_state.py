@@ -20,10 +20,11 @@ def get_state(num_qubits: int, state_type: str, state_params: dict) -> np.ndarra
     elif state_type == "random-sparse": 
         return get_sparse_random(num_qubits, **state_params)
     else:
+        # temp value to avoid division by zero
         x = np.linspace(*state_params["x_points"], num=2**num_qubits)
         state_params.pop("x_points")
         freqs = get_probability_freqs(x, 
                                       num_qubits, 
                                       state_type,
                                       state_params)
-        return freqs / np.linalg.norm(freqs)
+        return freqs
