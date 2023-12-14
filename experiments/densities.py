@@ -27,11 +27,13 @@ def get_probability_freqs(
     distance = (x_points.max() - x_points.min()) / (2**num_qubits - 1)
     delta = distance * .5
 
+    # temp value to avoid division by zero
+    temp_avoid = 1e-7
     if density == "lognormal":
         density_params = {"s": 1, "loc": 1, "scale": 1} if not density_params else density_params
         
         x_values = lognorm.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values)
+        #x_values = x_values / np.linalg.norm(x_values + temp_avoid)
         #xcdf_plus = lognorm.cdf(x_points + delta, **density_params)
         #xcdf_minus = lognorm.cdf(x_points - delta, **density_params)
         #x_pmf = xcdf_plus - xcdf_minus
@@ -40,7 +42,7 @@ def get_probability_freqs(
     elif density == "normal":
         density_params = {"loc": .5, "scale": 1} if not density_params else density_params
         x_values = norm.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values)
+        #x_values = x_values / np.linalg.norm(x_values + temp_avoid)
 
         #xcdf_plus = norm.cdf(x_points + delta, **density_params)
         #xcdf_minus = norm.cdf(x_points - delta, **density_params)
@@ -55,7 +57,7 @@ def get_probability_freqs(
         x_values_bim1 = norm.pdf(x_points, loc=density_params["loc_bim1"], scale=density_params["scale_bim1"])
         x_values_bim2 = norm.pdf(x_points, loc=density_params["loc_bim2"], scale=density_params["scale_bim2"])
         x_values  = x_values_bim1 + x_values_bim2
-        x_values = x_values / np.linalg.norm(x_values)
+        #x_values = x_values / np.linalg.norm(x_values + temp_avoid)
         #xcdf_plus_bim1 = norm.cdf(x_points + delta, 
         #                          loc=density_params["loc_bim1"], 
         #                          scale=density_params["scale_bim1"])
@@ -79,7 +81,7 @@ def get_probability_freqs(
         density_params = {"c": 1, "loc": 10, "scale": 5} if not density_params else density_params
 
         x_values = triang.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values)
+        #x_values = x_values / np.linalg.norm(x_values + temp_avoid)
 
         #xcdf_plus = triang.cdf(x_points + delta, **density_params)
         #xcdf_minus = triang.cdf(x_points - delta, **density_params)
@@ -92,7 +94,7 @@ def get_probability_freqs(
         density_params = {"loc": 1, "scale": 1} if not density_params else density_params
 
         x_values = laplace.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values)
+        #x_values = x_values / np.linalg.norm(x_values + temp_avoid)
         #xcdf_plus = laplace.cdf(x_points + delta, **density_params)
         #xcdf_minus =laplace.cdf(x_points - delta, **density_params)
         #x_pmf = xcdf_plus - xcdf_minus
