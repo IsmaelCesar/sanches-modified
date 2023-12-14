@@ -7,5 +7,6 @@ pandas
 jupyter
 ipykernel
 matplotlib
+pylatexenc
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch
