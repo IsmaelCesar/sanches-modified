@@ -18,7 +18,7 @@ logger.addHandler(stream_handler)
 
 def main():
 
-    num_qubits = 4
+    num_qubits = 10
     target_state = get_state(num_qubits, "random-sparse", {"density": .5 })
 
     sanchez_circuit = SanchezAnsatz(target_state, 0.05, build_modified=True)
@@ -30,9 +30,9 @@ def main():
     genetic = SanchezGenetic(10)
     genetic.evolve(
         pop_initializer=Initialization(individual_size=num_qubits, pop_size=10),
-        crossover_op=PermutationX(probability=.5, crossover_type="pmx"),
-        mutation_op=PermutationMut(probability=.2, mutation_type="scramble"),
-        fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(100)),
+        crossover_op=PermutationX(probability=.9, crossover_type="order"),
+        mutation_op=PermutationMut(probability=.5, mutation_type="scramble"),
+        fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA()),
         selection_op=SelectIndividuals(num_individuals=2),
         k_elitism=KElitism(k=4)
     )
