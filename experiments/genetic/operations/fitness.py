@@ -44,7 +44,7 @@ class QuFitnessCalculator:
         self._individual_params = []
     
 
-    def inidividual_params(self) -> np.array:
+    def individual_params(self) -> np.array:
         return np.array(self._individual_params)
 
     def compute_fitness(self, individual):

@@ -75,7 +75,7 @@ class SanchezGenetic:
             best_fitness = self._statistics["best_fitness"][-1]
             best_individual = self._best_individual[-1]
 
-            logger.info(f"N gen: {gen_idx + 1}; Best fitness: {best_fitness}; Best indifidual: {best_individual}")
+            logger.info(f"N gen: {gen_idx + 1}; Best fitness: {np.round(best_fitness, 4)}; Best individual: {best_individual}")
 
             # creating new population
             new_population = []
@@ -91,7 +91,7 @@ class SanchezGenetic:
             # computing new fitness
             new_population = np.array(new_population, dtype=int)
             new_fitness = np.apply_along_axis(fitness_calculator.compute_fitness, 1, new_population)
-            new_individual_params = fitness_calculator.inidividual_params()
+            new_individual_params = fitness_calculator.individual_params()
             fitness_calculator.reset_individual_params()
 
             # select survivors
