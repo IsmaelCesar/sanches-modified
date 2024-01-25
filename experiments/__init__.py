@@ -20,7 +20,8 @@ from .util import (
         load_circuit,
         create_dir,
         get_random_state,
-        get_sparse_random
+        get_sparse_random,
+        ParseKvAction
     )
 
 
@@ -34,5 +35,6 @@ __all__ = [
     "create_dir",
     "get_random_state",
     "get_sparse_random",
-    "get_state"
+    "get_state",
+    "ParseKvAction"
 ]

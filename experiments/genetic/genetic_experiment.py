@@ -9,21 +9,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import numpy as np
+from experiments.util import create_dir, write_row
 from .operations.initialization import Initialization
 from .operations.crossover import PermutationX
 from .operations.mutation import PermutationMut
 from .operations.selection import SelectIndividuals, KElitism
 from .operations.fitness import QuFitnessCalculator
+from typing import List
 import logging
 
 logger = logging.getLogger("sanchez-genetic")
+
+class _GeneticResultsHandler:
+
+    def __init__(self, results_dir: str, statistics_header: List[str], ): 
+        self._statistics_header = statistics_header
+        self._results_dir = results_dir
+        
+        create_dir(self._results_dir)
+        self.write_data(statistics_header, "statistics.csv", "w+")
+    
+    def write_data(self, data, file_name: str, mode: str):
+        file_path = os.path.join(self._results_dir, file_name)
+        write_row(data, file_path, mode)
 
 class SanchezGenetic:
 
     def __init__(
             self, 
             n_gen: int,
+            results_dir: str = "results"
             ):
         
         self._n_gen = n_gen
@@ -35,6 +52,7 @@ class SanchezGenetic:
 
         self._best_individual = []
         self._best_individual_params = []
+        self._results_handler = _GeneticResultsHandler(results_dir, list(self._statistics.keys()))
         
 
     def save_statistics(self, population, fitness, individual_params): 
@@ -49,6 +67,8 @@ class SanchezGenetic:
 
         self._best_individual += [population[best_idx]]
         self._best_individual_params += [individual_params[best_idx]]
+
+        self._results_handler.write_data([mean_fitness, std_fitness, fitness[best_idx]], "statistics.csv")
 
 
     def evolve(

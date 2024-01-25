@@ -18,6 +18,7 @@ from qiskit import QuantumCircuit
 from scipy import sparse
 from .experiment_module import ExperimentModule
 import matplotlib.pyplot as plt
+from argparse import Action
 
 # -- procedures for writing data
 
@@ -111,3 +112,26 @@ def get_sparse_random(num_qubits, density, seed=7, complex_state=False):
     rng = np.random.default_rng(seed)
     state = _get_sparse_array(num_qubits, density, rng, complex_state=complex_state)
     return state / np.linalg.norm(state)
+
+class ParseKvAction(Action):
+   """
+   Based on the parsin procedure available in:
+   https://gist.github.com/vadimkantorov/37518ff88808af840884355c845049ea
+   WHere the last comment has an extended version of the code
+   """
+   
+   def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, dict())
+
+        for v in values:
+           try:
+              key, value = v.split("=")
+              if key == "complex_state": 
+                getattr(namespace, self.dest)[key] = bool(value)
+              elif key == "x_points":
+                 getattr(namespace, self.dest)[key] = tuple([int(digits) for digits in re.findall(r"\d+", value) ])
+              else:               
+                getattr(namespace, self.dest)[key] = float(value)
+           except Exception as e:
+              print("Invalid Input: ", v)
+              print(e)
