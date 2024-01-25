@@ -29,12 +29,12 @@ def main():
     
     genetic = SanchezGenetic(10)
     genetic.evolve(
-        pop_initializer=Initialization(individual_size=num_qubits, pop_size=10),
+        pop_initializer=Initialization(individual_size=num_qubits, pop_size=15),
         crossover_op=PermutationX(probability=.9, crossover_type="order"),
         mutation_op=PermutationMut(probability=.5, mutation_type="scramble"),
-        fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA()),
+        fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250)),
         selection_op=SelectIndividuals(num_individuals=2),
-        k_elitism=KElitism(k=4)
+        k_elitism=KElitism(k=1)
     )
 
 
