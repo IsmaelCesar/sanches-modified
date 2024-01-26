@@ -107,18 +107,15 @@ def main(
     crossover_type: str,
     mutation_type: str,
     crossover_prob: float,
-    mutation_prob: float,
+    mutation_prob: float
 ):
+    
     #creating run dir
     run_dir = os.path.join(results_dir, f"run_{run_idx}")
     create_dir(run_dir)
 
     target_state = get_state(num_qubits, state_type=state_type, state_params=state_params)
-
-    sanchez_circuit = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=True)
-    init_params = sanchez_circuit.init_params
-
-    t_sanchez = transpile(sanchez_circuit, basis_gates=["cx", "u"])
+    
 
     if "density" in state_params:
         density_value = state_params["density"]
@@ -129,12 +126,21 @@ def main(
     create_dir(f"{run_dir}/csv")
     create_dir(f"{run_dir}/circuits")
 
-    genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, results_dir=run_dir)
+
+    # Running original circuit
+    build_modified = False
+
+    original_sanchez_circuit = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=build_modified)
+    init_params = original_sanchez_circuit.init_params
+
+    t_o_sanchez = transpile(original_sanchez_circuit, basis_gates=["cx", "u"])
+
+    genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, build_modified=build_modified, results_dir=run_dir)
     genetic.evolve(
         pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
         crossover_op=PermutationX(probability=crossover_prob, crossover_type=crossover_type),
         mutation_op=PermutationMut(probability=mutation_prob, mutation_type=mutation_type),
-        fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250)),
+        fitness_calculator=QuFitnessCalculator(t_o_sanchez, init_params, target_state, SPSA(250)),
         selection_op=SelectIndividuals(num_individuals=2),
         k_elitism=KElitism(k=1)
     )

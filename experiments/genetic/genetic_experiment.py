@@ -59,6 +59,7 @@ class SanchezGenetic:
             n_gen: int,
             num_qubits: int,
             eps: int,
+            build_modified: bool,
             results_dir: str = "results"
             ):
         
@@ -75,13 +76,15 @@ class SanchezGenetic:
         self._best_individual_params = []
         self._results_handler = _GeneticResultsHandler(results_dir)
 
+        name_prefix = "modified" if build_modified else "original"
+
         # writing statistics  header:
-        self._statistics_filename = f"statistics_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._statistics_filename = f"{name_prefix}_statistics_{self._num_qubits}qb_{self._eps}eps.csv"
         self._results_handler.write_csv(list(self._statistics.keys()), mode="w+", file_name=self._statistics_filename)
 
-        self._best_individual_fname = f"best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
-        self._best_individual_params_fname = f"best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
-        self._plot_fname = f"plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
+        self._best_individual_fname = f"{name_prefix}_best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._best_individual_params_fname = f"{name_prefix}_best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._plot_fname = f"{name_prefix}_plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
         
 
     def save_statistics(self, population, fitness, individual_params): 
