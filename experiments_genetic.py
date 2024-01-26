@@ -129,22 +129,23 @@ def main(
 
     # Running original circuit
     build_modified = False
+    modified_opts = [False, True]
 
-    original_sanchez_circuit = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=build_modified)
-    init_params = original_sanchez_circuit.init_params
+    for build_modified in modified_opts:
+        sanchez_ansatz = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=build_modified)
+        init_params = sanchez_ansatz.init_params
 
-    t_o_sanchez = transpile(original_sanchez_circuit, basis_gates=["cx", "u"])
+        t_sanchez = transpile(sanchez_ansatz, basis_gates=["cx", "u"])
 
-    genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, build_modified=build_modified, results_dir=run_dir)
-    genetic.evolve(
-        pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
-        crossover_op=PermutationX(probability=crossover_prob, crossover_type=crossover_type),
-        mutation_op=PermutationMut(probability=mutation_prob, mutation_type=mutation_type),
-        fitness_calculator=QuFitnessCalculator(t_o_sanchez, init_params, target_state, SPSA(250)),
-        selection_op=SelectIndividuals(num_individuals=2),
-        k_elitism=KElitism(k=1)
-    )
-
+        genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, build_modified=build_modified, results_dir=run_dir)
+        genetic.evolve(
+            pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
+            crossover_op=PermutationX(probability=crossover_prob, crossover_type=crossover_type),
+            mutation_op=PermutationMut(probability=mutation_prob, mutation_type=mutation_type),
+            fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250)),
+            selection_op=SelectIndividuals(num_individuals=2),
+            k_elitism=KElitism(k=1)
+        )
 
 if __name__ == "__main__":
     args_dict = dict(args._get_kwargs())

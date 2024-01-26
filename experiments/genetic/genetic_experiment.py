@@ -78,10 +78,16 @@ class SanchezGenetic:
 
         name_prefix = "modified" if build_modified else "original"
 
+        file_handler = logging.FileHandler(f"{results_dir}/{name_prefix}_log_{num_qubits}qb_{eps}eps.log", mode="w+")
+        logger.addHandler(file_handler)
+
+        logger.info(f"--- \t Running {name_prefix} version \t ---")
+
         # writing statistics  header:
         self._statistics_filename = f"{name_prefix}_statistics_{self._num_qubits}qb_{self._eps}eps.csv"
         self._results_handler.write_csv(list(self._statistics.keys()), mode="w+", file_name=self._statistics_filename)
 
+        # defining filenames
         self._best_individual_fname = f"{name_prefix}_best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
         self._best_individual_params_fname = f"{name_prefix}_best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
         self._plot_fname = f"{name_prefix}_plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
