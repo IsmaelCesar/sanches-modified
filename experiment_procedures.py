@@ -22,39 +22,17 @@ from experiments import (
     write_opcounts,
     save_circuit,
     create_dir,
-    get_state
+    get_state,
+    ParseKvAction
 )
 from sanchez_ansatz import SanchezAnsatz
 from qiskit import transpile
 from qiskit_algorithms.optimizers import SPSA
 from itertools import product
 from experiments.densities import get_probability_freqs
-from argparse import ArgumentParser, Action
+from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import logging
-
-class ParseKvAction(Action):
-   """
-   Based on the parsin procedure available in:
-   https://gist.github.com/vadimkantorov/37518ff88808af840884355c845049ea
-   WHere the last comment has an extended version of the code
-   """
-   
-   def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, dict())
-
-        for v in values:
-           try:
-              key, value = v.split("=")
-              if key == "complex_state": 
-                getattr(namespace, self.dest)[key] = bool(value)
-              elif key == "x_points":
-                 getattr(namespace, self.dest)[key] = tuple([int(digits) for digits in re.findall(r"\d+", value) ])
-              else:               
-                getattr(namespace, self.dest)[key] = float(value)
-           except Exception as e:
-              print("Invalid Input: ", v)
-              print(e)
 
 parser = ArgumentParser()
 parser.add_argument("--results-dir", 
