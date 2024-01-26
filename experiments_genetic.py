@@ -64,20 +64,20 @@ parser.add_argument("--run-idx",
                     default=0,
                     required=False,
                     help="The index of the current-execution")
-parser.add_argument("--n_gen", 
+parser.add_argument("--n-gen", 
                     type=int,
                     required=True,
                     help="Total number of generations for the genetic algorithm")
-parser.add_argument("--pop_size", 
+parser.add_argument("--pop-size", 
                     type=int,
                     required=True,
                     help="Population size")
-parser.add_argument("--crossover_type",
+parser.add_argument("--crossover-type",
                     type=str,
                     choices=["pmx", "edge", "cycle", "order" ],
                     required=True,
                     help="Population size")
-parser.add_argument("--mutation_type",
+parser.add_argument("--mutation-type",
                     type=str,
                     choices=["scramble", "inverse", "insert", "swap"],
                     required=True,
@@ -97,6 +97,9 @@ def main(
     crossover_type: str,
     mutation_type: str,
 ):
+    #creating run dir
+    run_dir = os.path.join(results_dir, f"run_{run_idx}")
+    create_dir(run_dir)
 
     target_state = get_state(num_qubits, state_type=state_type, state_params=state_params)
 
@@ -105,12 +108,20 @@ def main(
 
     t_sanchez = transpile(sanchez_circuit, basis_gates=["cx", "u"])
 
+    if "density" in state_params:
+        density_value = state_params["density"]
+        run_dir = os.path.join(run_dir, f"density_{density_value}")
+        create_dir(run_dir)
     
-    genetic = SanchezGenetic(n_gen=n_gen)
+    create_dir(f"{run_dir}/plots")
+    create_dir(f"{run_dir}/csv")
+    create_dir(f"{run_dir}/circuits")
+
+    genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, results_dir=run_dir)
     genetic.evolve(
         pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
-        crossover_op=PermutationX(probability=.8, crossover_type=mutation_type),
-        mutation_op=PermutationMut(probability=.2, mutation_type=crossover_type),
+        crossover_op=PermutationX(probability=.8, crossover_type=crossover_type),
+        mutation_op=PermutationMut(probability=.2, mutation_type=mutation_type),
         fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250)),
         selection_op=SelectIndividuals(num_individuals=2),
         k_elitism=KElitism(k=1)
@@ -119,4 +130,4 @@ def main(
 
 if __name__ == "__main__":
     args_dict = dict(args._get_kwargs())
-    main(args_dict)
+    main(**args_dict)

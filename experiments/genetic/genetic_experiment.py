@@ -18,32 +18,53 @@ from .operations.mutation import PermutationMut
 from .operations.selection import SelectIndividuals, KElitism
 from .operations.fitness import QuFitnessCalculator
 from typing import List
+import matplotlib.pyplot as plt
 import logging
 
 logger = logging.getLogger("sanchez-genetic")
 
 class _GeneticResultsHandler:
 
-    def __init__(self, results_dir: str, statistics_header: List[str], ): 
-        self._statistics_header = statistics_header
+    def __init__(self, results_dir: str):
         self._results_dir = results_dir
         
-        create_dir(self._results_dir)
-        self.write_data(statistics_header, "statistics.csv", "w+")
+        #create_dir(self._results_dir)
+        #self.write_csv(statistics_header, filename, "w+")
     
-    def write_data(self, data, file_name: str, mode: str):
-        file_path = os.path.join(self._results_dir, file_name)
+    def write_csv(self, data, file_name: str, mode: str):
+        file_path = os.path.join(f"{self._results_dir}/csv", file_name)
         write_row(data, file_path, mode)
+    
+    def save_plots(self, statistics: dict, filename: str):
+        assert "mean_fitness" in statistics
+        assert "best_fitness" in statistics
+
+        plt.title("Fitness over  the generations")
+        plt.plot(statistics["mean_fitness"], "--", color="gray", label="mean_fitness")
+        plt.plot(statistics["best_fitness"], "-.", color="red", label="best_fitness")
+        plt.legend(loc="best")
+        plt.ylabel("Fitness")
+        plt.xlabel("Generations")
+        plt.grid()
+
+        plot_file = os.path.join(self._results_dir, "plots", filename)
+        plt.savefig(plot_file)
+        plt.clf()
+        plt.close()
 
 class SanchezGenetic:
 
     def __init__(
             self, 
             n_gen: int,
+            num_qubits: int,
+            eps: int,
             results_dir: str = "results"
             ):
         
         self._n_gen = n_gen
+        self._num_qubits = num_qubits
+        self._eps = eps
         self._statistics = { 
             "mean_fitness": [],
             "std_fitness": [],
@@ -52,7 +73,15 @@ class SanchezGenetic:
 
         self._best_individual = []
         self._best_individual_params = []
-        self._results_handler = _GeneticResultsHandler(results_dir, list(self._statistics.keys()))
+        self._results_handler = _GeneticResultsHandler(results_dir)
+
+        # writing statistics  header:
+        self._statistics_filename = f"statistics_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._results_handler.write_csv(list(self._statistics.keys()), mode="w+", file_name=self._statistics_filename)
+
+        self._best_individual_fname = f"best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._best_individual_params_fname = f"best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
+        self._plot_fname = f"plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
         
 
     def save_statistics(self, population, fitness, individual_params): 
@@ -68,7 +97,9 @@ class SanchezGenetic:
         self._best_individual += [population[best_idx]]
         self._best_individual_params += [individual_params[best_idx]]
 
-        self._results_handler.write_data([mean_fitness, std_fitness, fitness[best_idx]], "statistics.csv")
+        self._results_handler.write_csv([mean_fitness, std_fitness, fitness[best_idx]], self._statistics_filename, mode="a")
+        self._results_handler.write_csv([self._best_individual[-1]], self._best_individual_fname, mode="a+")
+        self._results_handler.write_csv([self._best_individual_params[-1]], self._best_individual_params_fname, mode="a+")
 
 
     def evolve(
@@ -120,3 +151,5 @@ class SanchezGenetic:
                                                         new_population, new_fitness, new_individual_params)
 
             self.save_statistics(population, fitness, individual_params)
+        
+        self._results_handler.save_plots(self._statistics, self._plot_fname)
