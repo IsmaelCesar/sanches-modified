@@ -24,11 +24,13 @@ class QuFitnessCalculator:
             init_params: Union[List[float], np.array],
             target_state: Union[List[float], np.array],
             optimizer: Optimizer = None,
+            device: str = "CPU"
     ):
         self._ansatz = ansatz
         self._init_params = init_params
         self._optimizer = optimizer
         self._target_state = target_state
+        self._device = device
         self._individual_params = []
 
         if not self._optimizer :
@@ -53,7 +55,8 @@ class QuFitnessCalculator:
                     t_ansatz, 
                     optimizer=self._optimizer, 
                     target_state=self._target_state,
-                    init_params=self._init_params)
+                    init_params=self._init_params,
+                    device=self._device)
         minimization_result = e_module.minimize()
         
         self._save_individual_params(minimization_result.x)
