@@ -117,6 +117,8 @@ def main(
 ):
     
     #creating run dir
+    create_dir(results_dir)
+
     run_dir = os.path.join(results_dir, f"run_{run_idx}")
     create_dir(run_dir)
 
@@ -134,7 +136,6 @@ def main(
 
 
     # Running original circuit
-    build_modified = False
     modified_opts = [False, True]
 
     for build_modified in modified_opts:

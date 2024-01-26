@@ -11,6 +11,7 @@
 # limitations under the License.
 import os
 import numpy as np
+import pickle as pkl
 from experiments.util import create_dir, write_row
 from .operations.initialization import Initialization
 from .operations.crossover import PermutationX
@@ -35,6 +36,12 @@ class _GeneticResultsHandler:
         file_path = os.path.join(f"{self._results_dir}/csv", file_name)
         write_row(data, file_path, mode)
     
+
+    def save_circuit(self, circuit_object, circuit_fname): 
+        file_path = os.path.join(self._results_dir, "circuits", circuit_fname)
+        with open(file_path, "wb") as file: 
+            pkl.dump(circuit_object, file)
+
     def save_plots(self, statistics: dict, filename: str):
         assert "mean_fitness" in statistics
         assert "best_fitness" in statistics
@@ -91,6 +98,7 @@ class SanchezGenetic:
         self._best_individual_fname = f"{name_prefix}_best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
         self._best_individual_params_fname = f"{name_prefix}_best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
         self._plot_fname = f"{name_prefix}_plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
+        self._circuit_fname = f"{name_prefix}_circuit_{self._num_qubits}qb_{self._eps}eps.pkl"
         
 
     def save_statistics(self, population, fitness, individual_params): 
@@ -120,6 +128,8 @@ class SanchezGenetic:
             selection_op: SelectIndividuals, 
             k_elitism: KElitism):
         
+        self._results_handler.save_circuit(fitness_calculator._ansatz, self._circuit_fname)
+
         pop_size = pop_initializer.pop_size
 
         population = pop_initializer.random()
