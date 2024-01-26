@@ -99,7 +99,7 @@ class SanchezGenetic:
 
         self._results_handler.write_csv([mean_fitness, std_fitness, fitness[best_idx]], self._statistics_filename, mode="a")
         self._results_handler.write_csv([self._best_individual[-1]], self._best_individual_fname, mode="a+")
-        self._results_handler.write_csv([self._best_individual_params[-1]], self._best_individual_params_fname, mode="a+")
+        self._results_handler.write_csv(self._best_individual_params[-1], self._best_individual_params_fname, mode="a+")
 
 
     def evolve(

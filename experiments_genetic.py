@@ -82,6 +82,16 @@ parser.add_argument("--mutation-type",
                     choices=["scramble", "inverse", "insert", "swap"],
                     required=True,
                     help="Population size")
+parser.add_argument("--crossover-prob", 
+                    type=float,
+                    default=.8,
+                    required=False,
+                    help="Defines the probability of the crossover operation to occur")
+parser.add_argument("--mutation-prob", 
+                    type=float,
+                    default=.3, 
+                    required=False,
+                    help="Defines the probability of the mutation to occur")
 args = parser.parse_args()
 
 def main(
@@ -96,6 +106,8 @@ def main(
     pop_size: int,
     crossover_type: str,
     mutation_type: str,
+    crossover_prob: float,
+    mutation_prob: float,
 ):
     #creating run dir
     run_dir = os.path.join(results_dir, f"run_{run_idx}")
@@ -120,8 +132,8 @@ def main(
     genetic = SanchezGenetic(n_gen=n_gen, num_qubits=num_qubits, eps=eps, results_dir=run_dir)
     genetic.evolve(
         pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
-        crossover_op=PermutationX(probability=.8, crossover_type=crossover_type),
-        mutation_op=PermutationMut(probability=.2, mutation_type=mutation_type),
+        crossover_op=PermutationX(probability=crossover_prob, crossover_type=crossover_type),
+        mutation_op=PermutationMut(probability=mutation_prob, mutation_type=mutation_type),
         fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250)),
         selection_op=SelectIndividuals(num_individuals=2),
         k_elitism=KElitism(k=1)
