@@ -13,6 +13,7 @@
 import numpy as np
 import os
 import csv
+import re
 import pickle as pkl
 from qiskit import QuantumCircuit
 from scipy import sparse
