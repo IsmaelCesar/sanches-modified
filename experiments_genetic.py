@@ -92,6 +92,11 @@ parser.add_argument("--mutation-prob",
                     default=.3, 
                     required=False,
                     help="Defines the probability of the mutation to occur")
+parser.add_argument("--maxiter",
+                    type=int, 
+                    default=250,
+                    required=False,
+                    help="defines the maximum number of iterations the SPSA must be executed")
 parser.add_argument("--device", 
                     type=str,
                     default="CPU", 
@@ -113,6 +118,7 @@ def main(
     mutation_type: str,
     crossover_prob: float,
     mutation_prob: float,
+    maxiter: int,
     device: str
 ):
     
@@ -149,7 +155,7 @@ def main(
             pop_initializer=Initialization(individual_size=num_qubits, pop_size=pop_size),
             crossover_op=PermutationX(probability=crossover_prob, crossover_type=crossover_type),
             mutation_op=PermutationMut(probability=mutation_prob, mutation_type=mutation_type),
-            fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(250), device=device),
+            fitness_calculator=QuFitnessCalculator(t_sanchez, init_params, target_state, SPSA(maxiter=maxiter), device=device),
             selection_op=SelectIndividuals(num_individuals=2),
             k_elitism=KElitism(k=1)
         )
