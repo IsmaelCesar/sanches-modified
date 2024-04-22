@@ -70,22 +70,35 @@ class ExperimentModule():
     def _callback_fn(self, value) -> None: 
         self._loss_progression += [value]
 
-    def _objectivive_fn(self) -> callable:
+    def _objectivive_fn(self, loss_type="fidloss") -> callable:
         def objective_fid(x):
             state_vec = self._get_statevector(x)
             fid_loss = 1 - np.abs(self._target_state @ state_vec) ** 2
             
             self._callback_fn(fid_loss)
             return fid_loss
+        
+        def objective_mse(x):
+            state_vec = self._get_statevector(x)
+            fid_loss = np.mean(self._target_state - state_vec) ** 2
 
-        return objective_fid
+            self._callback_fn(fid_loss)
+            return fid_loss
 
-    def minimize(self) -> Result:
+        if loss_type == "fidloss":
+            return objective_fid
+        elif loss_type == "mse":
+            return objective_mse
+        else:
+            raise Exception("undefined loss type")
+
+
+    def minimize(self, loss_type = "fidloss") -> Result:
 
         init_params = self._init_params
         if init_params is None:
             init_params = np.pi / 4 * np.random.rand(self.ansatz.num_parameters)
 
-        self.result = self._optimizer.minimize(self._objectivive_fn(), x0=init_params)
+        self.result = self._optimizer.minimize(self._objectivive_fn(loss_type=loss_type), x0=init_params)
         return self.result
 
