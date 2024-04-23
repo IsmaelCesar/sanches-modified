@@ -21,6 +21,7 @@ from .util import (
         create_dir,
         get_random_state,
         get_sparse_random,
+        load_config_file,
         ParseKvAction
     )
 
@@ -36,5 +37,6 @@ __all__ = [
     "get_random_state",
     "get_sparse_random",
     "get_state",
+    "load_config_file",
     "ParseKvAction"
 ]
