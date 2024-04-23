@@ -10,7 +10,7 @@ When running the `script_experiment.py` the config file it utilizes `script_expe
 eps: 0.05
 num_qubits: 15
 n_runs: 2
-maxinter: 2
+maxiter: 2
 distributions:
   - dist_type: "normal"
     dist_params: 

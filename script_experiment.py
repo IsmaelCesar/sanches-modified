@@ -44,7 +44,7 @@ def run_dist(
         eps: float,
         eta: float = 4*np.pi,
         build_modified: bool = False,
-        maxinter: int = 250,
+        maxiter: int = 250,
         n_runs: int = 10) -> None:
 
     dist_path = os.path.join(RESULTS_SCRIPT_PATH, dist_type)
@@ -64,13 +64,14 @@ def run_dist(
 
         em = ExperimentModule(
                 t_sanchez,
-                SPSA(maxiter=maxinter),
+                SPSA(maxiter=maxiter),
                 target_state,
                 init_params)
 
         result = em.minimize()
 
         approx_state = get_resulting_state(t_sanchez, result.x)
+        approx_state = approx_state.astype(np.float32)
 
         og_mod_prefix = "modified" if build_modified else "original"
         filename = f"{og_mod_prefix}_plot_{dist_type}_{num_qubits}qb_{eps}eps.csv"
@@ -87,6 +88,7 @@ def main():
     eps = config_data["eps"]
     num_qubits = config_data["num_qubits"]
     n_runs = config_data["n_runs"]
+    maxiter = config_data["maxiter"]
 
     for dist_data in config_data["distributions"]:
         dist_type = dist_data["dist_type"]
@@ -96,7 +98,7 @@ def main():
                  deepcopy(dist_params), 
                  num_qubits,
                  eps=eps,
-                 maxinter=num_qubits, 
+                 maxiter=maxiter, 
                  n_runs=n_runs)
         
         run_dist(dist_type,
@@ -104,7 +106,7 @@ def main():
                  num_qubits,
                  eps=eps,
                  build_modified=True,
-                 maxinter=num_qubits, 
+                 maxiter=maxiter, 
                  n_runs=n_runs)
 
 if __name__ == "__main__":
