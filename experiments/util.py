@@ -14,6 +14,7 @@ import numpy as np
 import os
 import csv
 import re
+import yaml
 import pickle as pkl
 from qiskit import QuantumCircuit
 from scipy import sparse
@@ -113,6 +114,14 @@ def get_sparse_random(num_qubits, density, seed=7, complex_state=False):
     rng = np.random.default_rng(seed)
     state = _get_sparse_array(num_qubits, density, rng, complex_state=complex_state)
     return state / np.linalg.norm(state)
+
+
+def load_config_file(filename: str) -> dict: 
+
+    with open(filename, "r") as file:
+        config_data = yaml.load(file, yaml.SafeLoader)
+    
+    return config_data        
 
 class ParseKvAction(Action):
    """
