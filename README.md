@@ -7,7 +7,7 @@ inside the `results` directory.
 
 When running the `script_experiment.py` the config file it utilizes `script_experiment_config.yml` must follow the format as in:
 ```yml
-eta: 0.05
+eps: 0.05
 num_qubits: 15
 n_runs: 2
 maxinter: 2
@@ -28,8 +28,8 @@ distributions:
       x_points: [0, 1]
       loc_bim1: 0.25
       scale_bim1: 0.1
-      loc_bim1: 0.75
-      scale_bim1: 0.15
+      loc_bim2: 0.75
+      scale_bim2: 0.15
   - dist_type: "laplace"
     dist_params: 
       x_points: [0, 1]
