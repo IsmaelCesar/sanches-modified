@@ -19,6 +19,7 @@ from argparse import ArgumentParser
 from sanchez_ansatz import SanchezAnsatz
 from qiskit import transpile
 from experiments import ExperimentModule
+from typing import List
 
 parser = ArgumentParser()
 parser.add_argument("--num_qubits", type=int, help="The number of qubits in the system")
@@ -57,7 +58,7 @@ def experiments(
     eta: float,
     run_modified: bool,
     result_dir: str,
-    basis_gates: ["cx", "u"]
+    basis_gates: List[str] = ["cx", "u"]
 ):
 
     state = np.random.rand(2**num_qubits)

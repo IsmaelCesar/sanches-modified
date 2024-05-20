@@ -22,7 +22,7 @@ from qclib.state_preparation.util.state_tree_preparation import (
 from qclib.state_preparation.util.angle_tree_preparation import create_angles_tree
 from qclib.state_preparation.util import tree_utils
 from qclib.state_preparation.util.angle_tree_preparation import NodeAngleTree
-from qiskit.circuit.library import RZGate, RYGate, CXGate, CZGate, CYGate
+from qiskit.circuit.library import RZGate, RYGate, CXGate, CZGate, CYGate, TwoLocal
 
 class SanchezAnsatz(BlueprintCircuit):
     """
@@ -39,7 +39,9 @@ class SanchezAnsatz(BlueprintCircuit):
             eta: Optional[float] = 4*np.pi,
             name: Optional[str] = "SanchezAnsatz",
             global_phase: Optional[bool] = False,
-            build_modified: Optional[bool] = False
+            build_modified: Optional[bool] = False,
+            use_entanglement: Optional[bool] = False,
+            entanglement_type: Optional[str] = "pairwise"
         ):
         """
         Parameters
@@ -62,6 +64,8 @@ class SanchezAnsatz(BlueprintCircuit):
         self.global_phase = global_phase
         self.init_params = []
         self.build_modified = build_modified
+        self.use_entanglement = use_entanglement
+        self.entanglement_type = entanglement_type
     
     def _check_configuration(self, raise_on_failure: bool = True) -> bool: 
         log2_params = np.log2(len(self.target_state))
@@ -104,12 +108,19 @@ class SanchezAnsatz(BlueprintCircuit):
         arg_1 = np.ceil(-1/2 * np.log2(internal_log))
 
         return int(np.max([arg_1, 2]))
+    
+    def _get_etanglement_block(self) -> TwoLocal:
+        return TwoLocal(self.num_qubits, [], 'cx', reps=1, entanglement=self.entanglement_type)
 
     def _build(self) -> None:
         super()._build()
         circuit = QuantumCircuit(*self.qregs)
 
         self._build_define(circuit)
+
+        if self.use_entanglement:
+            ent_type = self._get_etanglement_block()
+            circuit.compose(ent_type, circuit.qubits, inplace=True)
 
         try:
             operation = circuit.to_gate(label=self.name)
