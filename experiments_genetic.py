@@ -46,6 +46,12 @@ parser.add_argument("--eps",
                     help=("(Epsilon) tolerated error used for defining the approximation "+
                           "and at which level the tree will be truncated in the original "+
                           "article"))
+parser.add_argument("--use-entanglement",
+                    required=False,
+                    default=False,
+                    action='store_true', 
+                    help=("Define if the circuit definition should compose and entanglement layer"+
+                          " at the end"))
 parser.add_argument("--eta", 
                     type=float,
                     required=False,
@@ -109,6 +115,7 @@ def main(
     num_qubits: int,
     state_type: str, 
     eps: float,
+    use_entanglement: bool,
     eta: float, 
     state_params: dict,
     run_idx: int,
@@ -145,7 +152,7 @@ def main(
     modified_opts = [False, True]
 
     for build_modified in modified_opts:
-        sanchez_ansatz = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=build_modified)
+        sanchez_ansatz = SanchezAnsatz(target_state, eps=eps, eta=eta, build_modified=build_modified, use_entanglement=use_entanglement)
         init_params = sanchez_ansatz.init_params
 
         t_sanchez = transpile(sanchez_ansatz, basis_gates=["cx", "u"])

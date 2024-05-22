@@ -60,8 +60,7 @@ parser.add_argument("--eps",
                     help=("(Epsilon) tolerated error used for defining the approximation "+
                           "and at which level the tree will be truncated in the original "+
                           "article"))
-parser.add_argument("--use-entanglement", 
-                    type=bool,
+parser.add_argument("--use-entanglement",
                     required=False,
                     default=False,
                     action='store_true', 
@@ -98,7 +97,7 @@ def run(results_dir: str,
         state_type: str,
         eps: float,
         eta: float,
-        use_entanglement: float,
+        use_entanglement: bool,
         state_params: dict,
         run_idx: int,
         device: str,
