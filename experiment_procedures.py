@@ -20,7 +20,7 @@ from experiments import (
     save_plots, 
     write_row, 
     write_opcounts,
-    save_circuit,
+    save_qasm_circuit,
     create_dir,
     get_state,
     ParseKvAction
@@ -186,15 +186,19 @@ def run(results_dir: str,
     write_row(em_modified._loss_progression, file=f"{run_dir}/csv/modified_fidloss_{num_qubits}qb_{eps}eps.csv")
 
     # writing csv best point
-    write_row(em_original.result.x, file=f"{run_dir}/csv/original_xbest_{num_qubits}qb_{eps}eps.csv")
-    write_row(em_modified.result.x, file=f"{run_dir}/csv/modified_xbest_{num_qubits}qb_{eps}eps.csv")
+    best_point_original = em_original.result.x
+    best_point_modified = em_modified.result.x
+    write_row(best_point_original, file=f"{run_dir}/csv/original_xbest_{num_qubits}qb_{eps}eps.csv")
+    write_row(best_point_modified, file=f"{run_dir}/csv/modified_xbest_{num_qubits}qb_{eps}eps.csv")
 
     # writing op_counts
     write_opcounts(em_original, em_modified, file=f"{run_dir}/op_counts/counts_{num_qubits}qb_{eps}eps.txt")
 
     # saving circuits
-    save_circuit(em_original._ansatz, file=f"{run_dir}/circuits/original_curcuit_{num_qubits}qb_{eps}eps.pkl")
-    save_circuit(em_modified._ansatz, file=f"{run_dir}/circuits/modified_curcuit_{num_qubits}qb_{eps}eps.pkl")
+    circuit_save_original = em_original._ansatz.assign_parameters(best_point_original)
+    circuit_save_modified = em_original._ansatz.assign_parameters(best_point_modified)
+    save_qasm_circuit(circuit_save_original, file=f"{run_dir}/circuits/original_curcuit_{num_qubits}qb_{eps}eps.qasm")
+    save_qasm_circuit(circuit_save_modified, file=f"{run_dir}/circuits/modified_curcuit_{num_qubits}qb_{eps}eps.qasm")
 
 if __name__ == "__main__":
     args_dict = dict(args._get_kwargs())
