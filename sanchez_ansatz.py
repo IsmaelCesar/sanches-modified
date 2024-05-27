@@ -120,7 +120,7 @@ class SanchezAnsatz(BlueprintCircuit):
 
         if self.use_entanglement:
             ent_type = self._get_etanglement_block()
-            circuit.compose(ent_type, circuit.qubits, inplace=True)
+            circuit.compose(ent_type, circuit.qubits[::-1], inplace=True)
 
         try:
             operation = circuit.to_gate(label=self.name)
