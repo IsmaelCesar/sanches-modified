@@ -12,6 +12,7 @@
 import os
 import numpy as np
 import pickle as pkl
+from qiskit import QuantumCircuit, transpile
 from experiments.util import create_dir, write_row
 from .operations.initialization import Initialization
 from .operations.crossover import PermutationX
@@ -41,6 +42,22 @@ class _GeneticResultsHandler:
         file_path = os.path.join(self._results_dir, "circuits", circuit_fname)
         with open(file_path, "wb") as file: 
             pkl.dump(circuit_object, file)
+
+    
+    def save_qasm_circuit(self, ansatz: QuantumCircuit, population: np.ndarray, invidivual_parameters: np.ndarray):
+        circuit_list = []
+        for indiv, indiv_params in zip(population, invidivual_parameters):
+            temp_circ = transpile(ansatz, initial_layout=indiv.tolist())
+            circuit_list.append(temp_circ.assign_parameters(indiv_params))
+
+        file_path = os.path.join(self._results_dir, "circuits", "circuit_individuals.qasm")
+        
+        with open(file_path, "w+") as f: 
+            for circ in circuit_list:
+                qasm_str = circ.qasm()
+                qasm_str = qasm_str.replace("\n", "")
+                f.write(f"{qasm_str}\n")
+
 
     def save_plots(self, statistics: dict, filename: str):
         assert "mean_fitness" in statistics
@@ -101,7 +118,7 @@ class SanchezGenetic:
         self._circuit_fname = f"{name_prefix}_circuit_{self._num_qubits}qb_{self._eps}eps.pkl"
         
 
-    def save_statistics(self, population, fitness, individual_params): 
+    def save_statistics(self, population, fitness, individual_params, ansatz: QuantumCircuit):
 
         best_idx = fitness.argmin()
         mean_fitness = np.mean(fitness)
@@ -117,6 +134,7 @@ class SanchezGenetic:
         self._results_handler.write_csv([mean_fitness, std_fitness, fitness[best_idx]], self._statistics_filename, mode="a")
         self._results_handler.write_csv([self._best_individual[-1]], self._best_individual_fname, mode="a+")
         self._results_handler.write_csv(self._best_individual_params[-1], self._best_individual_params_fname, mode="a+")
+        self._results_handler.save_qasm_circuit(ansatz, population, individual_params)
 
 
     def evolve(
