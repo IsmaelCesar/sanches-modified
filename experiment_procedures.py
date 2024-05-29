@@ -196,7 +196,8 @@ def run(results_dir: str,
 
     # saving circuits
     circuit_save_original = em_original._ansatz.assign_parameters(best_point_original)
-    circuit_save_modified = em_original._ansatz.assign_parameters(best_point_modified)
+    circuit_save_modified = em_modified._ansatz.assign_parameters(best_point_modified)
+
     save_qasm_circuit(circuit_save_original, file=f"{run_dir}/circuits/original_curcuit_{num_qubits}qb_{eps}eps.qasm")
     save_qasm_circuit(circuit_save_modified, file=f"{run_dir}/circuits/modified_curcuit_{num_qubits}qb_{eps}eps.qasm")
 
