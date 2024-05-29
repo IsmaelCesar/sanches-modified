@@ -37,26 +37,23 @@ class _GeneticResultsHandler:
         file_path = os.path.join(f"{self._results_dir}/csv", file_name)
         write_row(data, file_path, mode)
     
+    def save_qasm_circuit(
+        self,
+        ansatz: QuantumCircuit,
+        individual: np.ndarray,
+        individual_parameters: np.ndarray,
+        filename: str = "circuit_individuals.qasm",
+        mode="a+"):
 
-    def save_circuit(self, circuit_object, circuit_fname): 
-        file_path = os.path.join(self._results_dir, "circuits", circuit_fname)
-        with open(file_path, "wb") as file: 
-            pkl.dump(circuit_object, file)
+        temp_circ = transpile(ansatz, initial_layout=individual.tolist())
+        temp_circ = temp_circ.assign_parameters(individual_parameters)
 
-    
-    def save_qasm_circuit(self, ansatz: QuantumCircuit, population: np.ndarray, invidivual_parameters: np.ndarray):
-        circuit_list = []
-        for indiv, indiv_params in zip(population, invidivual_parameters):
-            temp_circ = transpile(ansatz, initial_layout=indiv.tolist())
-            circuit_list.append(temp_circ.assign_parameters(indiv_params))
-
-        file_path = os.path.join(self._results_dir, "circuits", "circuit_individuals.qasm")
+        file_path = os.path.join(self._results_dir, "circuits", filename)
         
-        with open(file_path, "w+") as f: 
-            for circ in circuit_list:
-                qasm_str = circ.qasm()
-                qasm_str = qasm_str.replace("\n", "")
-                f.write(f"{qasm_str}\n")
+        with open(file_path, mode) as f:
+            qasm_str = temp_circ.qasm()
+            qasm_str = qasm_str.replace("\n", "")
+            f.write(f"{qasm_str}\n")
 
 
     def save_plots(self, statistics: dict, filename: str):
@@ -115,10 +112,15 @@ class SanchezGenetic:
         self._best_individual_fname = f"{name_prefix}_best_individual_{self._num_qubits}qb_{self._eps}eps.csv"
         self._best_individual_params_fname = f"{name_prefix}_best_individual_params_{self._num_qubits}qb_{self._eps}eps.csv"
         self._plot_fname = f"{name_prefix}_plot_fitness_over_generations_{self._num_qubits}qb_{self._eps}eps.pdf"
-        self._circuit_fname = f"{name_prefix}_circuit_{self._num_qubits}qb_{self._eps}eps.pkl"
+        self._circuit_fname = f"{name_prefix}_circuit_{self._num_qubits}qb_{self._eps}eps.qasm"
         
 
-    def save_statistics(self, population, fitness, individual_params, ansatz: QuantumCircuit):
+    def save_statistics(
+        self, 
+        population, 
+        fitness, 
+        individual_params, 
+        ansatz: QuantumCircuit,):
 
         best_idx = fitness.argmin()
         mean_fitness = np.mean(fitness)
@@ -134,7 +136,12 @@ class SanchezGenetic:
         self._results_handler.write_csv([mean_fitness, std_fitness, fitness[best_idx]], self._statistics_filename, mode="a")
         self._results_handler.write_csv([self._best_individual[-1]], self._best_individual_fname, mode="a+")
         self._results_handler.write_csv(self._best_individual_params[-1], self._best_individual_params_fname, mode="a+")
-        self._results_handler.save_qasm_circuit(ansatz, population, individual_params)
+        self._results_handler.save_qasm_circuit(
+            ansatz, 
+            self._best_individual[-1], 
+            self._best_individual_params[-1], 
+            filename=self._circuit_fname,
+            mode="a+")
 
 
     def evolve(
@@ -145,8 +152,6 @@ class SanchezGenetic:
             fitness_calculator: QuFitnessCalculator,
             selection_op: SelectIndividuals, 
             k_elitism: KElitism):
-        
-        self._results_handler.save_circuit(fitness_calculator._ansatz, self._circuit_fname)
 
         pop_size = pop_initializer.pop_size
 
@@ -156,7 +161,7 @@ class SanchezGenetic:
         
         fitness_calculator.reset_individual_params()
 
-        self.save_statistics(population, fitness, individual_params)
+        self.save_statistics(population, fitness, individual_params, fitness_calculator._ansatz)
 
         for gen_idx in range(self._n_gen): 
 
@@ -187,6 +192,6 @@ class SanchezGenetic:
                                                         population, fitness, individual_params,
                                                         new_population, new_fitness, new_individual_params)
 
-            self.save_statistics(population, fitness, individual_params)
+            self.save_statistics(population, fitness, individual_params, fitness_calculator._ansatz)
         
         self._results_handler.save_plots(self._statistics, self._plot_fname)
