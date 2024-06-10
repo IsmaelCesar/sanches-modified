@@ -83,7 +83,7 @@ class ExperimentModule():
             loss = np.mean(self._target_state - state_vec) ** 2
 
             self._callback_fn(loss)
-            return loss
+            return float(loss)
 
         if loss_type == "fidloss":
             return objective_fid

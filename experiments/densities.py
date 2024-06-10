@@ -120,3 +120,14 @@ def get_probability_freqs(
         x_values = x_values /np.linalg.norm(x_values + temp_avoid)
         
     return x_values
+
+
+
+def compute_eta(density: str, density_params: dict): 
+    
+    assert density in ["lognormal", "laplace", "triangular", "normal", "bimodal", "black-scholes"]
+    
+    if density == "normal": 
+        eta = 1 / density_params["scale"]**2
+    
+    return eta
