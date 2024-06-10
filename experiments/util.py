@@ -16,6 +16,7 @@ import csv
 import re
 import yaml
 import pickle as pkl
+from qiskit_aer import Aer
 from qiskit import QuantumCircuit
 from scipy import sparse
 from .experiment_module import ExperimentModule
@@ -134,6 +135,13 @@ def load_config_file(filename: str) -> dict:
         config_data = yaml.load(file, yaml.SafeLoader)
     
     return config_data        
+
+def get_state_vector(quantum_circuit):
+    sv_sim = Aer.get_backend("statevector_simulator")
+    job = sv_sim.run(quantum_circuit)
+    result = job.result()
+    state_vector = result.get_statevector()
+    return state_vector.data
 
 class ParseKvAction(Action):
    """
