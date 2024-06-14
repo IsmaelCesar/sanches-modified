@@ -73,6 +73,18 @@ def save_circuit(circuit: QuantumCircuit, file="circuit.pkl"):
     with open(file, "wb") as f: 
         pkl.dump(circuit, f)
 
+def save_qasm_circuit(circuit: QuantumCircuit, file="circuit.qasm"): 
+    with open(file, "w+") as f:
+        qasm = circuit.qasm()
+        qasm = qasm.replace("\n", "")
+        f.write(qasm)
+
+def load_qasm_circuit(file="circuit.qasm") -> QuantumCircuit:
+    with open(file, "r") as f:
+        qasm = f.read(file)
+        quantum_circuit = QuantumCircuit.from_qasm_str(qasm)
+    return quantum_circuit
+
 def load_circuit(file: str) -> QuantumCircuit:
     with open(file, "rb") as f:
         circuit = pkl.load(f)
