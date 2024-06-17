@@ -32,7 +32,7 @@ class ExperimentModule():
     ):
         self._ansatz = ansatz
         self._optimizer = optimizer
-        self._target_state = target_state
+        self._target_state = target_state.astype(np.complex128)
         self._init_params = init_params
         self._loss_progression = []
         self.sv_sim = device
@@ -73,17 +73,17 @@ class ExperimentModule():
     def _objectivive_fn(self, loss_type="fidloss") -> callable:
         def objective_fid(x):
             state_vec = self._get_statevector(x)
-            fid_loss = 1 - np.abs(self._target_state @ state_vec) ** 2
+            loss = 1 - np.abs(self._target_state @ state_vec) ** 2
             
-            self._callback_fn(fid_loss)
-            return fid_loss
+            self._callback_fn(loss)
+            return loss
         
         def objective_mse(x):
             state_vec = self._get_statevector(x)
-            fid_loss = np.mean(self._target_state - state_vec) ** 2
+            loss = np.mean(self._target_state - state_vec) ** 2
 
-            self._callback_fn(fid_loss)
-            return fid_loss
+            self._callback_fn(loss)
+            return float(loss)
 
         if loss_type == "fidloss":
             return objective_fid
