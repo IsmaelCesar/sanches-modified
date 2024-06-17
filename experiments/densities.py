@@ -54,7 +54,7 @@ def get_probability_freqs(
     elif density == "normal":
         density_params = {"loc": .5, "scale": 1} if not density_params else density_params
         x_values = norm.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values + temp_avoid)
+        x_values = x_values / np.linalg.norm(x_values)
 
         #xcdf_plus = norm.cdf(x_points + delta, **density_params)
         #xcdf_minus = norm.cdf(x_points - delta, **density_params)
