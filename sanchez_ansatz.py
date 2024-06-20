@@ -211,12 +211,12 @@ class SanchezAnsatz(BlueprintCircuit):
             if any(level_yvalues):
                 yc_level = np.mean(level_yvalues)
                 self.init_params += [yc_level]
-                circuit.ry(Parameter(name=f"cluster_y[{c_lvl}]"), reversed_qubit[c_lvl])
+                circuit.ry(Parameter(name=f"[{c_lvl}]y"), reversed_qubit[c_lvl])
 
             if any(level_zvalues):                
                 zc_level = np.mean(level_zvalues)
                 self.init_params += [zc_level]
-                circuit.rz(Parameter(name=f"cluster_z[{c_lvl}]"), reversed_qubit[c_lvl])
+                circuit.rz(Parameter(name=f"[{c_lvl}]z"), reversed_qubit[c_lvl])
 
     def _cluster_modified(self, cluster_levels: List[int], angle_tree: NodeAngleTree, circuit: QuantumCircuit) -> None:
 
@@ -315,6 +315,6 @@ class SanchezAnsatz(BlueprintCircuit):
 
         total_angles: The total number of angles in the current level
         """
-        parameters =  [Parameter(name=f"{label}[{level_idx}, {param_idx}]") for param_idx in range(total_angles)]
+        parameters =  [Parameter(name=f"[{level_idx},{param_idx}]_{label}") for param_idx in range(total_angles)]
         return parameters
 
