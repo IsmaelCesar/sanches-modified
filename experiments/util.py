@@ -82,7 +82,7 @@ def save_qasm_circuit(circuit: QuantumCircuit, file="circuit.qasm"):
 
 def load_qasm_circuit(file="circuit.qasm") -> QuantumCircuit:
     with open(file, "r") as f:
-        qasm = f.read(file)
+        qasm = f.read()
         quantum_circuit = QuantumCircuit.from_qasm_str(qasm)
     return quantum_circuit
 
