@@ -17,12 +17,24 @@ from scipy.stats import (
     laplace,
 )
 
+def _compute_black_scholes(x_points: np.ndarray, num_qubits: int, K: int, c: int) -> np.ndarray:
+    
+    dist_values = np.zeros((2**num_qubits,))
+    s = K*c
+    for (point_idx, point_x) in enumerate(x_points): 
+        if -np.log(K*s) <= point_x and point_x < 0: 
+            dist_values[point_idx] = K - np.exp(-point_x) / s 
+        elif 0 < point_x and point_x <= np.log(K*s):
+            dist_values[point_idx] = K - np.exp(point_x) / s
+    
+    return dist_values
+
 def get_probability_freqs(
     x_points: np.ndarray,
     num_qubits: int,
     density: str,
     density_params: dict = None):
-    assert density in ["lognormal", "laplace", "triangular", "normal", "bimodal"]
+    assert density in ["lognormal", "laplace", "triangular", "normal", "bimodal", "black-scholes"]
 
     distance = (x_points.max() - x_points.min()) / (2**num_qubits - 1)
     delta = distance * .5
@@ -42,7 +54,7 @@ def get_probability_freqs(
     elif density == "normal":
         density_params = {"loc": .5, "scale": 1} if not density_params else density_params
         x_values = norm.pdf(x_points, **density_params)
-        x_values = x_values / np.linalg.norm(x_values + temp_avoid)
+        x_values = x_values / np.linalg.norm(x_values)
 
         #xcdf_plus = norm.cdf(x_points + delta, **density_params)
         #xcdf_minus = norm.cdf(x_points - delta, **density_params)
@@ -101,5 +113,21 @@ def get_probability_freqs(
         #xcdf_minus =laplace.cdf(x_points - delta, **density_params)
         #x_pmf = xcdf_plus - xcdf_minus
         #x_pmf += 1e-10
-
+    elif density == "black-scholes":
+        density_params = {"K": 45, "c": 3} if not density_params else density_params
+        
+        x_values = _compute_black_scholes(x_points, num_qubits, density_params["K"], density_params["c"])
+        x_values = x_values /np.linalg.norm(x_values + temp_avoid)
+        
     return x_values
+
+
+
+def compute_eta(density: str, density_params: dict): 
+    
+    assert density in ["lognormal", "laplace", "triangular", "normal", "bimodal", "black-scholes"]
+    
+    if density == "normal": 
+        eta = 1 / density_params["scale"]**2
+    
+    return eta
